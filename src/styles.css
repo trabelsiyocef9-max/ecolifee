@@ -67,12 +67,6 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-:root {
   --radius: 0.5rem;
   /* EcoLife palette */
   --background: oklch(0.965 0.012 85);        /* #F7F5F0 warm sand */
