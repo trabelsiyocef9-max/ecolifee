@@ -63,7 +63,7 @@ function TopBar() {
         className="h-48 w-auto object-contain"
       />
       <span
-        className="font-serif text-2xl tracking-tight"
+        className="font-serif text-5xl tracking-tight"
         style={{ color: "#1E2F23" }}
       >
         EcoLife
@@ -457,7 +457,7 @@ function Footer() {
             alt="EcoLife logo"
             className="h-16 w-auto object-contain"
           />
-          <span className="font-serif text-sm text-foreground">EcoLife</span>
+          <span className="font-serif text-3xl text-foreground">EcoLife</span>
         </div>
         <p>© {new Date().getFullYear()} EcoLife. Made for makers.</p>
       </div>
