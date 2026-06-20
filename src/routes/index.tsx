@@ -60,7 +60,7 @@ function TopBar() {
       <img
         src={logoAsset.url}
         alt="EcoLife logo"
-        className="h-16 w-auto object-contain"
+        className="h-48 w-auto object-contain"
       />
       <span
         className="font-serif text-2xl tracking-tight"
@@ -455,7 +455,7 @@ function Footer() {
           <img
             src={logoAsset.url}
             alt="EcoLife logo"
-            className="h-8 w-auto object-contain"
+            className="h-16 w-auto object-contain"
           />
           <span className="font-serif text-sm text-foreground">EcoLife</span>
         </div>
