@@ -3,6 +3,8 @@ import { useState, type FormEvent } from "react";
 import { ScanLine, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { NavBar } from "@/components/NavBar";
+
 
 import { Button } from "@/components/ui/button";
 import {
