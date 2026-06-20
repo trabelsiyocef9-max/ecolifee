@@ -60,7 +60,7 @@ function TopBar() {
       <img
         src={logoAsset.url}
         alt="EcoLife logo"
-        className="h-12 w-auto object-contain"
+        className="h-16 w-auto object-contain"
       />
       <span
         className="font-serif text-2xl tracking-tight"
