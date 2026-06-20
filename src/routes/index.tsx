@@ -188,61 +188,6 @@ function Corner({ className = "" }: { className?: string }) {
   );
 }
 
-/* -------------------- Interactive strip -------------------- */
-function InteractiveStrip() {
-  const [hobby, setHobby] = useState<string>("");
-  const [safety, setSafety] = useState<boolean>(false);
-
-  return (
-    <section id="scan" className="mx-auto w-full max-w-7xl px-6 pb-20 md:px-10 scroll-mt-24">
-      <div className="flex flex-col items-start justify-between gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:flex-row md:items-center md:p-10">
-        <div className="flex w-full flex-col gap-2 md:max-w-xs">
-          <Label
-            htmlFor="hobby"
-            className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55"
-          >
-            Select your hobby
-          </Label>
-          <Select value={hobby} onValueChange={setHobby}>
-            <SelectTrigger
-              id="hobby"
-              className="h-12 rounded-none border-0 border-b border-foreground bg-transparent px-0 font-serif text-lg shadow-none focus:ring-0"
-            >
-              <SelectValue placeholder="Choose one…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gaming">Gaming</SelectItem>
-              <SelectItem value="art">Art</SelectItem>
-              <SelectItem value="gardening">Gardening</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="hidden h-16 w-px bg-border md:block" />
-
-        <div className="flex items-center gap-4">
-          <Switch
-            id="safety"
-            checked={safety}
-            onCheckedChange={setSafety}
-            className="data-[state=checked]:bg-[color:var(--sage)]"
-          />
-          <div>
-            <Label
-              htmlFor="safety"
-              className="block font-serif text-lg text-foreground"
-            >
-              Safety Mode
-            </Label>
-            <p className="text-xs text-foreground/55">
-              Recommended for makers under 14
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* -------------------- Features -------------------- */
 const FEATURES = [
