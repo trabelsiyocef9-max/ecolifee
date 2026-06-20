@@ -1,16 +1,32 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { useAuth } from "@/hooks/useAuth";
 
-const LINKS = [
-  { label: "Home", to: "/", hash: undefined as string | undefined },
-  { label: "About", to: "/about", hash: undefined as string | undefined },
-  { label: "Scan Waste", to: "/", hash: "scan" },
-];
+type NavLink = { label: string; to: string };
 
 export function NavBar() {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const links: NavLink[] = isAuthenticated
+    ? [
+        { label: "Home", to: "/" },
+        { label: "About", to: "/about" },
+        { label: "Workspace", to: "/scanner" },
+      ]
+    : [
+        { label: "Home", to: "/" },
+        { label: "About", to: "/about" },
+      ];
+
+  function handleSignOut() {
+    signOut();
+    setOpen(false);
+    navigate({ to: "/" });
+  }
 
   return (
     <header
@@ -34,11 +50,10 @@ export function NavBar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-10 md:flex">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.label}
               to={l.to}
-              hash={l.hash}
               className="text-sm font-medium tracking-wide text-foreground/75 transition-colors hover:text-foreground"
               activeOptions={{ exact: true }}
               activeProps={{ className: "text-foreground" }}
@@ -46,6 +61,23 @@ export function NavBar() {
               {l.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="rounded-full border border-foreground/20 px-5 py-2 text-xs font-bold uppercase tracking-wider text-foreground transition-colors hover:bg-foreground hover:text-background"
+            >
+              Log out
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider shadow-[var(--shadow-elegant)] transition-colors"
+              style={{ backgroundColor: "var(--clay)", color: "var(--clay-foreground)" }}
+            >
+              Login
+            </Link>
+          )}
         </nav>
 
         {/* Mobile toggle */}
@@ -67,11 +99,10 @@ export function NavBar() {
           style={{ backgroundColor: "rgba(242, 239, 233, 0.95)" }}
         >
           <ul className="flex flex-col gap-1 px-6 py-4">
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <li key={l.label}>
                 <Link
                   to={l.to}
-                  hash={l.hash}
                   onClick={() => setOpen(false)}
                   className="block rounded-md px-2 py-3 font-serif text-lg text-foreground/85 hover:bg-foreground/5"
                 >
@@ -79,6 +110,26 @@ export function NavBar() {
                 </Link>
               </li>
             ))}
+            <li>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="block w-full rounded-md px-2 py-3 text-left font-serif text-lg text-foreground/85 hover:bg-foreground/5"
+                >
+                  Log out
+                </button>
+              ) : (
+                <Link
+                  to="/auth"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md px-2 py-3 font-serif text-lg"
+                  style={{ color: "var(--clay)" }}
+                >
+                  Login
+                </Link>
+              )}
+            </li>
           </ul>
         </nav>
       )}
