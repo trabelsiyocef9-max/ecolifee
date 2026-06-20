@@ -69,11 +69,14 @@ function Hero() {
         </p>
         <div className="mt-10 flex items-center gap-6">
           <Button
+            asChild
             size="lg"
             className="h-12 rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
           >
-            Start scanning
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <Link to="/auth">
+              Start scanning
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </Button>
           <a
             href="#features"
