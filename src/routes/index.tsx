@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { ScanLine, Wrench, Sparkles, ArrowRight, Leaf } from "lucide-react";
+import { ScanLine, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -56,15 +57,11 @@ function Landing() {
 function TopBar() {
   return (
     <header className="mx-auto flex w-full max-w-7xl items-center gap-3 px-6 py-6 md:px-10 md:py-8">
-      {/* Logo slot. Swap the SVG for the user's logo.png once available. */}
-      <div className="flex h-8 w-8 items-center justify-center">
-        <Leaf
-          className="h-7 w-7"
-          style={{ color: "#1E2F23" }}
-          strokeWidth={1.5}
-          aria-hidden
-        />
-      </div>
+      <img
+        src={logoAsset.url}
+        alt="EcoLife logo"
+        className="h-8 w-auto object-contain"
+      />
       <span
         className="font-serif text-2xl tracking-tight"
         style={{ color: "#1E2F23" }}
@@ -455,7 +452,11 @@ function Footer() {
     <footer className="mx-auto w-full max-w-7xl px-6 pb-10 pt-4 md:px-10">
       <div className="flex flex-col items-start justify-between gap-3 border-t border-border pt-8 text-xs text-foreground/55 md:flex-row md:items-center">
         <div className="flex items-center gap-2">
-          <Leaf className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+          <img
+            src={logoAsset.url}
+            alt="EcoLife logo"
+            className="h-4 w-auto object-contain"
+          />
           <span className="font-serif text-sm text-foreground">EcoLife</span>
         </div>
         <p>© {new Date().getFullYear()} EcoLife. Made for makers.</p>
