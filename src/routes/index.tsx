@@ -455,7 +455,7 @@ function Footer() {
           <img
             src={logoAsset.url}
             alt="EcoLife logo"
-            className="h-6 w-auto object-contain"
+            className="h-8 w-auto object-contain"
           />
           <span className="font-serif text-sm text-foreground">EcoLife</span>
         </div>
