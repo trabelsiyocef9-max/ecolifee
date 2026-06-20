@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
 function Landing() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground antialiased">
-      <TopBar />
+      <NavBar />
       <Hero />
       <InteractiveStrip />
       <Features />
@@ -55,24 +55,6 @@ function Landing() {
   );
 }
 
-/* -------------------- Top bar -------------------- */
-function TopBar() {
-  return (
-    <header className="mx-auto flex w-full max-w-7xl items-center gap-3 px-6 py-6 md:px-10 md:py-8">
-      <img
-        src={logoAsset.url}
-        alt="EcoLife logo"
-        className="h-48 w-auto object-contain"
-      />
-      <span
-        className="font-serif text-5xl tracking-tight"
-        style={{ color: "#1E2F23" }}
-      >
-        EcoLife
-      </span>
-    </header>
-  );
-}
 
 /* -------------------- Hero -------------------- */
 function Hero() {
