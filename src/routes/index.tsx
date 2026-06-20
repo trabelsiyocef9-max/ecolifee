@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { ScanLine, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import logoAsset from "@/assets/logo.png.asset.json";
