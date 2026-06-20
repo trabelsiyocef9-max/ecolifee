@@ -48,6 +48,7 @@ function Landing() {
       <Hero />
       <InteractiveStrip />
       <Features />
+      <DailyInspiration />
       <Contact />
       <Footer />
       <Toaster />
