@@ -202,7 +202,7 @@ function InteractiveStrip() {
   const [safety, setSafety] = useState<boolean>(false);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 pb-20 md:px-10">
+    <section id="scan" className="mx-auto w-full max-w-7xl px-6 pb-20 md:px-10 scroll-mt-24">
       <div className="flex flex-col items-start justify-between gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:flex-row md:items-center md:p-10">
         <div className="flex w-full flex-col gap-2 md:max-w-xs">
           <Label
