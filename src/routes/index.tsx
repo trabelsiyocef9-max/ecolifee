@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { ScanLine, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -48,6 +48,7 @@ function Landing() {
       <Hero />
       <InteractiveStrip />
       <Features />
+      <DailyInspiration />
       <Contact />
       <Footer />
       <Toaster />
@@ -314,6 +315,63 @@ function Features() {
             </p>
           </article>
         ))}
+      </div>
+    </section>
+  );
+}
+
+const SUSTAINABILITY_TIPS = [
+  "Glass jars can be upcycled into premium storage canisters; they take 1 million years to decompose in a landfill.",
+  "A single cotton T-shirt requires 2,700 liters of water to produce — upcycle old tees into tote bags instead.",
+  "Aluminum cans are infinitely recyclable and can be remade into planters, lanterns, or desk organizers.",
+  "Composting at home can divert up to 30% of household waste from landfills while enriching your soil.",
+  "Bamboo grows 30 times faster than trees and makes a sustainable alternative to plastic utensils.",
+  "Upcycling one piece of furniture can save approximately 50 kg of CO2 compared to buying new.",
+  "Plastic bags take 500 years to decompose; swap them for reusable totes made from old textiles.",
+  "Newspaper and cardboard can be woven into biodegradable seedling pots for your garden.",
+  "Cork is biodegradable and renewable — save wine corks to craft bulletin boards or coasters.",
+  "The average person generates over 4 pounds of trash daily; even small upcycling habits create massive collective impact.",
+];
+
+/* -------------------- Daily Inspiration -------------------- */
+function DailyInspiration() {
+  const [advice, setAdvice] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("https://api.adviceslip.com/advice")
+      .then((res) => {
+        if (!res.ok) throw new Error("API failed");
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled && data?.slip?.advice) {
+          setAdvice(data.slip.advice);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          const tip =
+            SUSTAINABILITY_TIPS[Math.floor(Math.random() * SUSTAINABILITY_TIPS.length)];
+          setAdvice(tip);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <section className="mx-auto w-full max-w-3xl px-6 md:px-10">
+      <div className="rounded-2xl border border-[#E5E3D8] bg-card p-10 shadow-[var(--shadow-elegant)]">
+        <span className="inline-block rounded-full bg-[color:var(--sage)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+          Eco-Tip
+        </span>
+        <p className="mt-5 font-serif text-xl leading-relaxed text-foreground md:text-2xl">
+          {advice || "Loading today's inspiration…"}
+        </p>
       </div>
     </section>
   );
