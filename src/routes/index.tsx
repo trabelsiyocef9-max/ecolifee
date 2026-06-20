@@ -337,11 +337,44 @@ function Features() {
 
 /* -------------------- Contact -------------------- */
 function Contact() {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function validate(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const name = (data.get("name") as string | null) ?? "";
+    const email = (data.get("email") as string | null) ?? "";
+    const message = (data.get("message") as string | null) ?? "";
+    const nextErrors: Record<string, string> = {};
+
+    if (!name.trim()) {
+      nextErrors.name = "Name cannot be empty.";
+    }
+
+    const emailTrimmed = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (message.trim().length < 10) {
+      nextErrors.message = "Message must be at least 10 characters long.";
+    }
+
+    return nextErrors;
+  }
+
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    toast.success("Thanks — we'll be in touch soon.");
-    form.reset();
+    const validationErrors = validate(form);
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      toast.success(
+        "Message sent successfully! We will get back to you shortly."
+      );
+      form.reset();
+    }
   }
 
   return (
@@ -362,15 +395,20 @@ function Contact() {
       </div>
 
       <form onSubmit={handleSubmit} className="mt-14 space-y-10">
-        <FieldLine label="Name" name="name" type="text" required />
+        <FieldLine
+          label="Name"
+          name="name"
+          type="text"
+          error={errors.name}
+        />
         <FieldLine
           label="Email"
           name="email"
           type="email"
-          required
           placeholder="you@earth.io"
+          error={errors.email}
         />
-        <FieldArea label="Message" name="message" required />
+        <FieldArea label="Message" name="message" error={errors.message} />
         <div className="pt-4">
           <Button
             type="submit"
@@ -389,14 +427,14 @@ function FieldLine({
   label,
   name,
   type,
-  required,
   placeholder,
+  error,
 }: {
   label: string;
   name: string;
   type: string;
-  required?: boolean;
   placeholder?: string;
+  error?: string;
 }) {
   return (
     <div>
@@ -410,10 +448,14 @@ function FieldLine({
         id={name}
         name={name}
         type={type}
-        required={required}
         placeholder={placeholder}
         className="mt-2 w-full border-0 border-b border-foreground bg-transparent px-0 py-3 font-serif text-lg text-foreground placeholder:text-foreground/30 focus:border-[color:var(--sage)] focus:outline-none focus:ring-0"
       />
+      {error && (
+        <p className="mt-1.5 text-sm" style={{ color: "#BF5E49" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -421,11 +463,11 @@ function FieldLine({
 function FieldArea({
   label,
   name,
-  required,
+  error,
 }: {
   label: string;
   name: string;
-  required?: boolean;
+  error?: string;
 }) {
   return (
     <div>
@@ -438,10 +480,14 @@ function FieldArea({
       <textarea
         id={name}
         name={name}
-        required={required}
         rows={4}
         className="mt-2 w-full resize-none border-0 border-b border-foreground bg-transparent px-0 py-3 font-sans text-base text-foreground placeholder:text-foreground/30 focus:border-[color:var(--sage)] focus:outline-none focus:ring-0"
       />
+      {error && (
+        <p className="mt-1.5 text-sm" style={{ color: "#BF5E49" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
