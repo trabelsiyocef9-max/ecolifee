@@ -3,6 +3,8 @@ import { useState, type FormEvent } from "react";
 import { ScanLine, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { NavBar } from "@/components/NavBar";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +44,7 @@ export const Route = createFileRoute("/")({
 function Landing() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground antialiased">
-      <TopBar />
+      <NavBar />
       <Hero />
       <InteractiveStrip />
       <Features />
@@ -53,24 +55,6 @@ function Landing() {
   );
 }
 
-/* -------------------- Top bar -------------------- */
-function TopBar() {
-  return (
-    <header className="mx-auto flex w-full max-w-7xl items-center gap-3 px-6 py-6 md:px-10 md:py-8">
-      <img
-        src={logoAsset.url}
-        alt="EcoLife logo"
-        className="h-48 w-auto object-contain"
-      />
-      <span
-        className="font-serif text-5xl tracking-tight"
-        style={{ color: "#1E2F23" }}
-      >
-        EcoLife
-      </span>
-    </header>
-  );
-}
 
 /* -------------------- Hero -------------------- */
 function Hero() {
@@ -218,7 +202,7 @@ function InteractiveStrip() {
   const [safety, setSafety] = useState<boolean>(false);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 pb-20 md:px-10">
+    <section id="scan" className="mx-auto w-full max-w-7xl px-6 pb-20 md:px-10 scroll-mt-24">
       <div className="flex flex-col items-start justify-between gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:flex-row md:items-center md:p-10">
         <div className="flex w-full flex-col gap-2 md:max-w-xs">
           <Label
