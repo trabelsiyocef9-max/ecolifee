@@ -1,0 +1,87 @@
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Menu, X } from "lucide-react";
+import logoAsset from "@/assets/logo.png.asset.json";
+
+const LINKS = [
+  { label: "Home", to: "/", hash: undefined as string | undefined },
+  { label: "About", to: "/about", hash: undefined as string | undefined },
+  { label: "Scan Waste", to: "/", hash: "scan" },
+];
+
+export function NavBar() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <header
+      className="sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur-md"
+      style={{ backgroundColor: "rgba(242, 239, 233, 0.8)" }}
+    >
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4 md:px-10">
+        <Link to="/" className="flex items-center gap-3">
+          <img
+            src={logoAsset.url}
+            alt="EcoLife logo"
+            className="h-12 w-auto object-contain md:h-14"
+          />
+          <span
+            className="font-serif text-2xl tracking-tight md:text-3xl"
+            style={{ color: "#1B261E" }}
+          >
+            EcoLife
+          </span>
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-10 md:flex">
+          {LINKS.map((l) => (
+            <Link
+              key={l.label}
+              to={l.to}
+              hash={l.hash}
+              className="text-sm font-medium tracking-wide text-foreground/75 transition-colors hover:text-foreground"
+              activeOptions={{ exact: true }}
+              activeProps={{ className: "text-foreground" }}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Mobile toggle */}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle navigation"
+          aria-expanded={open}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 text-foreground md:hidden"
+        >
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <nav
+          className="border-t border-border/40 md:hidden"
+          style={{ backgroundColor: "rgba(242, 239, 233, 0.95)" }}
+        >
+          <ul className="flex flex-col gap-1 px-6 py-4">
+            {LINKS.map((l) => (
+              <li key={l.label}>
+                <Link
+                  to={l.to}
+                  hash={l.hash}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md px-2 py-3 font-serif text-lg text-foreground/85 hover:bg-foreground/5"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </header>
+  );
+}
