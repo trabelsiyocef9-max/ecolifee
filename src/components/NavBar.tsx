@@ -22,8 +22,8 @@ export function NavBar() {
         { label: "About", to: "/about" },
       ];
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     setOpen(false);
     navigate({ to: "/" });
   }

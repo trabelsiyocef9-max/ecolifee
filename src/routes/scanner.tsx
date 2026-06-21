@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/scanner")({
   head: () => ({
@@ -117,31 +118,36 @@ const HOBBY_RECIPES: Record<string, Record<Tier, string[]>> = {
 };
 
 function ScannerPage() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [hobby, setHobby] = useState<string>("");
   const [preview, setPreview] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<string[] | null>(null);
   const [age, setAge] = useState<number>(14);
+  const [ageReady, setAgeReady] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (loading) return;
     if (!isAuthenticated) {
       navigate({ to: "/auth" });
       return;
     }
-    const stored = Number(localStorage.getItem("userAge"));
-    if (Number.isFinite(stored) && stored > 0) {
-      setAge(stored);
-    } else {
+    if (profile === null) return; // still loading profile
+    if (profile.age == null) {
       navigate({ to: "/age-check" });
+      return;
     }
-  }, [isAuthenticated, navigate]);
+    setAge(profile.age);
+    setAgeReady(true);
+  }, [isAuthenticated, loading, profile, navigate]);
 
   const tier = useMemo(() => tierForAge(age), [age]);
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !ageReady) return null;
+
+  const displayName = (profile?.name || user?.user_metadata?.name || user?.email || "friend") as string;
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -160,19 +166,18 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
-    // System prompt that would be sent to the AI (mocked locally for now).
-    const systemPrompt = `The user is ${age} years old. You must ONLY suggest tools and steps that are 100% safe for an ${age}-year-old to do independently. Hobby: ${hobby}.`;
-    // eslint-disable-next-line no-console
-    console.log("[EcoLife system prompt]", systemPrompt);
     setRecipe(HOBBY_RECIPES[hobby][tier]);
     toast.success(`Recipe tuned for a ${age}-year-old maker.`);
   }
 
-  function handleOverride(value: number[]) {
+  async function handleOverride(value: number[]) {
     const next = value[0] ?? age;
     setAge(next);
-    localStorage.setItem("userAge", String(next));
     setRecipe(null);
+    if (user) {
+      await supabase.from("profiles").update({ age: next }).eq("id", user.id);
+      await refreshProfile();
+    }
   }
 
   return (
@@ -189,14 +194,13 @@ function ScannerPage() {
           Workspace
         </p>
         <h1 className="font-serif text-4xl leading-tight text-foreground md:text-5xl">
-          Hi {user?.name?.split(" ")[0] ?? "friend"} — what are we remaking today?
+          Hi {displayName.split(" ")[0]} — what are we remaking today?
         </h1>
         <p className="mt-4 max-w-xl text-base font-light text-foreground/70">
           Pick a hobby, upload a photo of the item you'd like to upcycle, and we'll
           draft a step-by-step recipe tuned to your age and skill level.
         </p>
 
-        {/* Controls */}
         <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
           <div className="flex flex-col gap-2">
             <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
@@ -215,7 +219,6 @@ function ScannerPage() {
           </div>
         </div>
 
-        {/* Uploader */}
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center shadow-[var(--shadow-elegant)]">
             {preview ? (
@@ -257,7 +260,6 @@ function ScannerPage() {
           </div>
         </div>
 
-        {/* Recipe */}
         {recipe && (
           <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card p-10 shadow-[var(--shadow-elegant)]">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">Your recipe</p>
@@ -278,7 +280,6 @@ function ScannerPage() {
           </div>
         )}
 
-        {/* Dev tool */}
         <div className="mt-16 rounded-xl border border-dashed border-border/70 bg-card/40 p-5">
           <div className="mb-3 flex items-center justify-between">
             <Label className="text-[10px] font-medium uppercase tracking-[0.22em] text-foreground/45">
