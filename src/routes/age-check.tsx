@@ -4,12 +4,15 @@ import { Camera, ArrowRight } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/age-check")({
   head: () => ({
     meta: [
-      { title: "Facial Age Check — EcoLife" },
-      { name: "description", content: "Quick AI selfie age check to tailor your DIY recipes." },
+      { title: "Maker age — EcoLife" },
+      { name: "description", content: "Tell EcoLife your age so we tailor DIY recipes safely." },
     ],
   }),
   component: AgeCheckPage,
@@ -18,7 +21,7 @@ export const Route = createFileRoute("/age-check")({
 type Phase = "camera" | "scanning" | "result";
 
 function AgeCheckPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -26,13 +29,11 @@ function AgeCheckPage() {
   const [snapshot, setSnapshot] = useState<string | null>(null);
   const [age, setAge] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate({ to: "/auth" });
-      return;
-    }
-  }, [isAuthenticated, navigate]);
+    if (!loading && !isAuthenticated) navigate({ to: "/auth" });
+  }, [isAuthenticated, loading, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,9 +57,7 @@ function AgeCheckPage() {
       }
     }
     if (phase === "camera") start();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [phase]);
 
   function stopStream() {
@@ -81,11 +80,21 @@ function AgeCheckPage() {
       const estimated = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
       setAge(estimated);
       setPhase("result");
-    }, 2000);
+    }, 1500);
   }
 
-  function handleConfirm() {
-    if (age != null) localStorage.setItem("userAge", String(age));
+  async function handleConfirm() {
+    if (age == null || !user) return;
+    setSaving(true);
+    const { error: upsertErr } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, age }, { onConflict: "id" });
+    setSaving(false);
+    if (upsertErr) {
+      toast.error("We couldn't save your age. Please try again.");
+      return;
+    }
+    await refreshProfile();
     navigate({ to: "/scanner" });
   }
 
@@ -96,23 +105,21 @@ function AgeCheckPage() {
       <NavBar />
       <section className="mx-auto flex w-full max-w-md flex-col items-center px-6 py-16 md:py-24">
         <p className="mb-5 text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">
-          Step 02 — Safety
+          Step 02 — Maker profile
         </p>
         <h1 className="text-center font-serif text-4xl leading-tight text-foreground md:text-5xl">
-          Facial Age Check
+          Set your maker age
         </h1>
         <p className="mt-4 max-w-sm text-center text-base font-light text-foreground/70">
-          We quickly estimate your age so every DIY recipe matches what's safe for you to make on your own.
+          Take a quick selfie to set a starter age — you can fine-tune it on the next screen so every recipe matches what's safe for you to make.
+        </p>
+        <p className="mt-3 max-w-sm text-center text-xs italic text-foreground/50">
+          Demo only: this is a placeholder estimate, not real age verification.
         </p>
 
         <div className="relative mt-12 h-72 w-72 overflow-hidden rounded-full border border-border bg-card shadow-[var(--shadow-elegant)]">
           {phase === "camera" && (
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              className="h-full w-full object-cover"
-            />
+            <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
           )}
           {phase !== "camera" && snapshot && (
             <img src={snapshot} alt="Selfie" className="h-full w-full object-cover" />
@@ -120,16 +127,14 @@ function AgeCheckPage() {
           {phase === "scanning" && (
             <div className="absolute inset-0 flex items-center justify-center bg-[color:var(--background)]/70 backdrop-blur-sm">
               <p className="px-6 text-center font-serif text-lg text-foreground">
-                Scanning facial features…
+                Picking a starter age…
               </p>
             </div>
           )}
         </div>
 
         {error && (
-          <p className="mt-6 text-center text-sm" style={{ color: "#BF5E49" }}>
-            {error}
-          </p>
+          <p className="mt-6 text-center text-sm" style={{ color: "#BF5E49" }}>{error}</p>
         )}
 
         <div className="mt-10 flex flex-col items-center gap-4">
@@ -149,21 +154,23 @@ function AgeCheckPage() {
           {phase === "result" && age != null && (
             <>
               <p className="text-center font-serif text-2xl text-foreground">
-                AI estimation complete: You are <span className="text-[color:var(--clay)]">{age}</span> years old.
+                Starter age: <span className="text-[color:var(--clay)]">{age}</span>
               </p>
               <Button
                 type="button"
                 size="lg"
                 onClick={handleConfirm}
+                disabled={saving}
                 className="h-12 rounded-full bg-[color:var(--clay)] px-8 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
               >
-                Confirm & continue
+                {saving ? "Saving…" : "Confirm & continue"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </>
           )}
         </div>
       </section>
+      <Toaster />
     </div>
   );
 }
