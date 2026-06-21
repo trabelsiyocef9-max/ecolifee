@@ -25,10 +25,9 @@ function AuthPage() {
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  if (isAuthenticated) {
-    // Already signed in — bounce to workspace
-    navigate({ to: "/scanner" });
-  }
+  useEffect(() => {
+    if (isAuthenticated) navigate({ to: "/scanner" });
+  }, [isAuthenticated, navigate]);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
