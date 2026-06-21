@@ -69,7 +69,7 @@ function AgeCheckPage() {
     streamRef.current = null;
   }
 
-  function handleSnap() {
+  async function handleSnap() {
     const video = videoRef.current;
     if (!video) return;
     const canvas = document.createElement("canvas");
@@ -77,14 +77,38 @@ function AgeCheckPage() {
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext("2d");
     if (ctx) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    setSnapshot(canvas.toDataURL("image/png"));
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    setSnapshot(dataUrl);
     stopStream();
     setPhase("scanning");
-    setTimeout(() => {
-      const estimated = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
-      setAge(estimated);
+
+    const base64 = dataUrl.replace(/^data:image\/[a-z]+;base64,/, "");
+
+    try {
+      const formData = new FormData();
+      formData.append("api_key", FACE_API_KEY);
+      formData.append("api_secret", FACE_API_SECRET);
+      formData.append("image_base64", base64);
+      formData.append("return_attributes", "age");
+
+      const res = await fetch(FACE_API_URL, { method: "POST", body: formData });
+      if (!res.ok) throw new Error(`Face++ responded ${res.status}`);
+      const data = await res.json();
+      const estimatedAge = data?.faces?.[0]?.attributes?.age?.value;
+      if (typeof estimatedAge !== "number") throw new Error("No face detected");
+
+      toast.success(`Face++ Scan Complete: Estimated Age ${estimatedAge}`);
+      try { localStorage.setItem("userAge", String(estimatedAge)); } catch {}
+      setAge(estimatedAge);
       setPhase("result");
-    }, 1500);
+    } catch (err) {
+      console.error("Face++ error:", err);
+      toast.error("API Connection Failed. Falling back to Dev Mode.");
+      const fallback = 14;
+      try { localStorage.setItem("userAge", String(fallback)); } catch {}
+      setAge(fallback);
+      setPhase("result");
+    }
   }
 
   async function handleConfirm() {
