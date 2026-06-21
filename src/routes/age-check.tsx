@@ -155,7 +155,7 @@ function AgeCheckPage() {
           {phase === "scanning" && (
             <div className="absolute inset-0 flex items-center justify-center bg-[color:var(--background)]/70 backdrop-blur-sm">
               <p className="px-6 text-center font-serif text-lg text-foreground">
-                Picking a starter age…
+                Analyzing facial structure…
               </p>
             </div>
           )}
