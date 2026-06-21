@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Upload, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -26,40 +26,120 @@ export const Route = createFileRoute("/scanner")({
   component: ScannerPage,
 });
 
-const HOBBY_RECIPES: Record<string, string[]> = {
-  gaming: [
-    "Strip cardboard panels and cut to 18×24 cm to form a desktop console caddy.",
-    "Reinforce inner edges with folded strips for cable channeling.",
-    "Line interior with felt scraps to muffle vibration from controllers.",
-    "Add a matte finish with leftover acrylic; let cure for two hours.",
-  ],
-  art: [
-    "Soak waste paper and pulp it for handmade sketch sheets.",
-    "Press pulp between two cloths to remove water; air dry overnight.",
-    "Trim to A6 and bind with twine into a pocket sketchbook.",
-    "Seal cover with beeswax for a subtle, water-resistant finish.",
-  ],
-  gardening: [
-    "Clean glass jar; sand the rim for safety.",
-    "Layer pebbles, activated charcoal, and potting mix.",
-    "Transplant a low-light succulent or moss cluster.",
-    "Mist lightly; place near indirect window light.",
-  ],
+type Tier = "kid" | "tween" | "teen" | "adult";
+
+function tierForAge(age: number): Tier {
+  if (age <= 10) return "kid";
+  if (age <= 13) return "tween";
+  if (age <= 17) return "teen";
+  return "adult";
+}
+
+const HOBBY_RECIPES: Record<string, Record<Tier, string[]>> = {
+  gaming: {
+    kid: [
+      "With a grown-up nearby, fold a cardboard panel into a controller stand using only your hands — no cutting tools needed.",
+      "Decorate it with crayons, stickers, or washable markers.",
+      "Tape soft fabric scraps inside with kid-safe paper tape to stop wobble.",
+      "Set it on your desk and test it with a controller.",
+    ],
+    tween: [
+      "Use safety scissors to trim a cardboard panel to roughly 18×24 cm for a console caddy.",
+      "Fold inner edges by hand to make cable channels — no blades required.",
+      "Glue felt scraps inside with non-toxic school glue to dampen vibration.",
+      "Color the outside with markers or tempera paint and let dry one hour.",
+    ],
+    teen: [
+      "Score and snap cardboard panels to 18×24 cm using a ruler and safety cutter on a cutting mat.",
+      "Reinforce inner edges with folded strips for cable channeling.",
+      "Line interior with felt scraps using craft glue to muffle vibration.",
+      "Add a matte acrylic finish in a ventilated area; let cure for two hours.",
+    ],
+    adult: [
+      "Cut cardboard panels to 18×24 cm with a sharp utility knife on a self-healing mat.",
+      "Heat-set folded reinforcement strips with a low-temp glue gun for cable channels.",
+      "Line the interior with felt using contact adhesive for vibration damping.",
+      "Spray-finish with matte acrylic in a ventilated space; cure two hours.",
+    ],
+  },
+  art: {
+    kid: [
+      "Tear waste paper into small pieces with your hands.",
+      "Soak in a bowl of warm water for 10 minutes — ask an adult to help with the water.",
+      "Press the soft pulp flat between two clean cloths and let it air dry overnight.",
+      "Decorate the dry sheet with crayons or stickers.",
+    ],
+    tween: [
+      "Tear waste paper and soak it; mash with a wooden spoon (no blender needed).",
+      "Press the pulp between cloths to remove water; air dry overnight.",
+      "Trim with safety scissors to A6 size.",
+      "Bind pages together with twine — no needles required.",
+    ],
+    teen: [
+      "Soak waste paper and pulp it in a blender for handmade sketch sheets (adult supervision the first time).",
+      "Press pulp between two cloths to remove water; air dry overnight.",
+      "Trim to A6 and bind with twine into a pocket sketchbook.",
+      "Seal the cover with a thin coat of beeswax warmed in a bowl of hot water.",
+    ],
+    adult: [
+      "Pulp waste paper in a blender; pour onto a deckle and screen.",
+      "Couch sheets onto felt, press, and air-dry overnight.",
+      "Trim to A6 and saddle-stitch with waxed thread and a bookbinding needle.",
+      "Seal cover with melted beeswax over low heat for a water-resistant finish.",
+    ],
+  },
+  gardening: {
+    kid: [
+      "Rinse a plastic bottle or jar with the lid still on — skip glass for now.",
+      "Fill the bottom with small pebbles you've collected and rinsed.",
+      "Add potting mix with a spoon.",
+      "Plant a moss clump and mist with a spray bottle.",
+    ],
+    tween: [
+      "Wash a sturdy jar; check the rim is smooth (no chips).",
+      "Layer pebbles, a thin charcoal layer, and potting mix using a spoon.",
+      "Transplant a small succulent with gloves on.",
+      "Mist lightly and place in indirect light.",
+    ],
+    teen: [
+      "Clean a glass jar; lightly sand the rim with fine sandpaper for safety.",
+      "Layer pebbles, activated charcoal, and potting mix.",
+      "Transplant a low-light succulent or moss cluster.",
+      "Mist lightly; place near indirect window light.",
+    ],
+    adult: [
+      "Clean and sterilise a glass jar; smooth the rim with 220-grit sandpaper.",
+      "Layer drainage pebbles, activated charcoal, sphagnum moss, and a substrate mix.",
+      "Transplant a low-light succulent or moss cluster; tamp gently.",
+      "Mist lightly; site near bright indirect light and monitor humidity weekly.",
+    ],
+  },
 };
 
 function ScannerPage() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [hobby, setHobby] = useState<string>("");
-  const [safety, setSafety] = useState<boolean>(true);
   const [preview, setPreview] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<string[] | null>(null);
+  const [age, setAge] = useState<number>(14);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) navigate({ to: "/auth" });
+    if (!isAuthenticated) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    const stored = Number(localStorage.getItem("userAge"));
+    if (Number.isFinite(stored) && stored > 0) {
+      setAge(stored);
+    } else {
+      navigate({ to: "/age-check" });
+    }
   }, [isAuthenticated, navigate]);
+
+  const tier = useMemo(() => tierForAge(age), [age]);
 
   if (!isAuthenticated) return null;
 
@@ -80,8 +160,19 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
-    setRecipe(HOBBY_RECIPES[hobby] ?? HOBBY_RECIPES.art);
-    toast.success("Your DIY recipe is ready.");
+    // System prompt that would be sent to the AI (mocked locally for now).
+    const systemPrompt = `The user is ${age} years old. You must ONLY suggest tools and steps that are 100% safe for an ${age}-year-old to do independently. Hobby: ${hobby}.`;
+    // eslint-disable-next-line no-console
+    console.log("[EcoLife system prompt]", systemPrompt);
+    setRecipe(HOBBY_RECIPES[hobby][tier]);
+    toast.success(`Recipe tuned for a ${age}-year-old maker.`);
+  }
+
+  function handleOverride(value: number[]) {
+    const next = value[0] ?? age;
+    setAge(next);
+    localStorage.setItem("userAge", String(next));
+    setRecipe(null);
   }
 
   return (
@@ -89,6 +180,11 @@ function ScannerPage() {
       <NavBar />
 
       <section className="mx-auto w-full max-w-5xl px-6 py-16 md:px-10 md:py-24">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--sage)]/30 bg-[color:var(--sage)]/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--sage)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--sage)]" />
+          Maker Profile: {age} Years Old
+        </div>
+
         <p className="mb-5 text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">
           Workspace
         </p>
@@ -97,11 +193,11 @@ function ScannerPage() {
         </h1>
         <p className="mt-4 max-w-xl text-base font-light text-foreground/70">
           Pick a hobby, upload a photo of the item you'd like to upcycle, and we'll
-          draft a step-by-step recipe in your style.
+          draft a step-by-step recipe tuned to your age and skill level.
         </p>
 
         {/* Controls */}
-        <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:grid-cols-2 md:p-10">
+        <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
           <div className="flex flex-col gap-2">
             <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
               Select your hobby
@@ -116,21 +212,6 @@ function ScannerPage() {
                 <SelectItem value="gardening">Gardening</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Switch
-              id="safety"
-              checked={safety}
-              onCheckedChange={setSafety}
-              className="data-[state=checked]:bg-[color:var(--sage)]"
-            />
-            <div>
-              <Label htmlFor="safety" className="block font-serif text-lg text-foreground">
-                Safety Mode
-              </Label>
-              <p className="text-xs text-foreground/55">Recommended for makers under 14</p>
-            </div>
           </div>
         </div>
 
@@ -147,20 +228,10 @@ function ScannerPage() {
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleFile} />
               <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFile} />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileRef.current?.click()}
-                className="rounded-full"
-              >
+              <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="rounded-full">
                 <Upload className="mr-2 h-4 w-4" /> Upload photo
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => cameraRef.current?.click()}
-                className="rounded-full"
-              >
+              <Button type="button" variant="outline" onClick={() => cameraRef.current?.click()} className="rounded-full">
                 <Camera className="mr-2 h-4 w-4" /> Use camera
               </Button>
             </div>
@@ -171,8 +242,7 @@ function ScannerPage() {
               <p className="text-xs uppercase tracking-[0.18em] text-foreground/55">Next step</p>
               <h2 className="mt-2 font-serif text-2xl text-foreground">Generate your DIY recipe</h2>
               <p className="mt-3 text-sm font-light text-foreground/70">
-                When you've picked a hobby and added a photo, we'll draft a step-by-step
-                upcycle plan tailored to your skill level.
+                We'll draft a step-by-step upcycle plan that's safe for a {age}-year-old to do independently.
               </p>
             </div>
             <Button
@@ -182,7 +252,7 @@ function ScannerPage() {
               className="mt-8 h-12 rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              Generate recipe
+              Generate DIY Recipe
             </Button>
           </div>
         </div>
@@ -202,13 +272,29 @@ function ScannerPage() {
                 </li>
               ))}
             </ol>
-            {safety && (
-              <p className="mt-8 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-foreground/55">
-                <ArrowRight className="h-3 w-3" /> Safety mode on — sharp tools and heat sources have been filtered out.
-              </p>
-            )}
+            <p className="mt-8 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-foreground/55">
+              <ArrowRight className="h-3 w-3" /> Tools and steps filtered for an independent {age}-year-old maker.
+            </p>
           </div>
         )}
+
+        {/* Dev tool */}
+        <div className="mt-16 rounded-xl border border-dashed border-border/70 bg-card/40 p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <Label className="text-[10px] font-medium uppercase tracking-[0.22em] text-foreground/45">
+              Override Age (Dev Only)
+            </Label>
+            <span className="font-serif text-sm text-foreground/70">{age} yrs</span>
+          </div>
+          <Slider
+            min={8}
+            max={20}
+            step={1}
+            value={[age]}
+            onValueChange={handleOverride}
+            className="[&_[data-slot=slider-range]]:bg-[color:var(--clay)] [&_[data-slot=slider-thumb)]:border-[color:var(--clay)]"
+          />
+        </div>
       </section>
       <Toaster />
     </div>

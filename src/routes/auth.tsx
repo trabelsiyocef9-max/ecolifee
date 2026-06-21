@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
@@ -25,10 +25,9 @@ function AuthPage() {
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  if (isAuthenticated) {
-    // Already signed in — bounce to workspace
-    navigate({ to: "/scanner" });
-  }
+  useEffect(() => {
+    if (isAuthenticated) navigate({ to: "/scanner" });
+  }, [isAuthenticated, navigate]);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,7 +51,7 @@ function AuthPage() {
       return;
     }
     toast.success(mode === "signup" ? "Welcome to EcoLife." : "Welcome back.");
-    navigate({ to: "/scanner" });
+    navigate({ to: mode === "signup" ? "/age-check" : "/scanner" });
   }
 
   return (
