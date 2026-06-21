@@ -51,7 +51,7 @@ function AuthPage() {
       return;
     }
     toast.success(mode === "signup" ? "Welcome to EcoLife." : "Welcome back.");
-    navigate({ to: "/scanner" });
+    navigate({ to: mode === "signup" ? "/age-check" : "/scanner" });
   }
 
   return (
