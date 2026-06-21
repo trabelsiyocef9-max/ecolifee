@@ -8,6 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
+const FACE_API_KEY = "zC3Do2HuNEgSD0LX4FC9sGtmd0f-1ggY";
+const FACE_API_SECRET = "xtgHRXkjBSjS-ZNRjEd0qvZSwzGyyZ9c";
+const FACE_API_URL = "https://api-us.faceplusplus.com/facepp/v3/detect";
+
 export const Route = createFileRoute("/age-check")({
   head: () => ({
     meta: [
