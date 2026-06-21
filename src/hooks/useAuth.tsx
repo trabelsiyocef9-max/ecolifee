@@ -1,81 +1,89 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-type StoredUser = { name: string; email: string; password: string };
-type SessionUser = { name: string; email: string };
+type Profile = { name: string; age: number | null };
 
 type AuthContextValue = {
-  user: SessionUser | null;
+  user: User | null;
+  session: Session | null;
+  profile: Profile | null;
   isAuthenticated: boolean;
-  signUp: (name: string, email: string, password: string) => { ok: boolean; error?: string };
-  signIn: (email: string, password: string) => { ok: boolean; error?: string };
-  signOut: () => void;
+  loading: boolean;
+  signUp: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
-
-const USERS_KEY = "ecolife.users";
-const SESSION_KEY = "ecolife.session";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readUsers(): StoredUser[] {
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    return raw ? (JSON.parse(raw) as StoredUser[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeUsers(users: StoredUser[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [ready, setReady] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  async function loadProfile(userId: string) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("name, age")
+      .eq("id", userId)
+      .maybeSingle();
+    setProfile(data ? { name: data.name ?? "", age: data.age ?? null } : { name: "", age: null });
+  }
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (raw) setUser(JSON.parse(raw) as SessionUser);
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
-  }, []);
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+      setUser(sess?.user ?? null);
+      if (sess?.user) {
+        // defer to avoid deadlock with onAuthStateChange
+        setTimeout(() => { loadProfile(sess.user.id); }, 0);
+      } else {
+        setProfile(null);
+      }
+    });
 
-  function persistSession(next: SessionUser | null) {
-    setUser(next);
-    if (next) localStorage.setItem(SESSION_KEY, JSON.stringify(next));
-    else localStorage.removeItem(SESSION_KEY);
-  }
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      if (data.session?.user) loadProfile(data.session.user.id);
+      setLoading(false);
+    });
+
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const value: AuthContextValue = {
     user,
+    session,
+    profile,
     isAuthenticated: !!user,
-    signUp(name, email, password) {
-      const users = readUsers();
-      const exists = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (exists) return { ok: false, error: "An account with that email already exists." };
-      const next = [...users, { name, email, password }];
-      writeUsers(next);
-      persistSession({ name, email });
+    loading,
+    async signUp(name, email, password) {
+      const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/scanner` : undefined;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name }, emailRedirectTo: redirectTo },
+      });
+      if (error) return { ok: false, error: error.message };
       return { ok: true };
     },
-    signIn(email, password) {
-      const users = readUsers();
-      const found = users.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password,
-      );
-      if (!found) return { ok: false, error: "Invalid email or password." };
-      persistSession({ name: found.name, email: found.email });
+    async signIn(email, password) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { ok: false, error: error.message };
       return { ok: true };
     },
-    signOut() {
-      persistSession(null);
+    async signOut() {
+      await supabase.auth.signOut();
+    },
+    async refreshProfile() {
+      if (user) await loadProfile(user.id);
     },
   };
 
-  if (!ready) return null;
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

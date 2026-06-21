@@ -22,6 +22,7 @@ type Mode = "signin" | "signup";
 function AuthPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -29,7 +30,7 @@ function AuthPage() {
     if (isAuthenticated) navigate({ to: "/scanner" });
   }, [isAuthenticated, navigate]);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
@@ -45,7 +46,12 @@ function AuthPage() {
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
-    const result = mode === "signup" ? signUp(name, email, password) : signIn(email, password);
+    setSubmitting(true);
+    const result = mode === "signup"
+      ? await signUp(name, email, password)
+      : await signIn(email, password);
+    setSubmitting(false);
+
     if (!result.ok) {
       toast.error(result.error ?? "Something went wrong.");
       return;
@@ -101,9 +107,10 @@ function AuthPage() {
             <Button
               type="submit"
               size="lg"
+              disabled={submitting}
               className="h-12 w-full rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
             >
-              {mode === "signup" ? "Create account" : "Sign in"}
+              {submitting ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
