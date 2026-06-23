@@ -165,18 +165,9 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
+    // Silently adapt to the user's saved age — no visible mention to the user.
     setRecipe(HOBBY_RECIPES[hobby][tier]);
-    toast.success(`Recipe tuned for a ${age}-year-old maker.`);
-  }
-
-  async function handleOverride(value: number[]) {
-    const next = value[0] ?? age;
-    setAge(next);
-    setRecipe(null);
-    if (user) {
-      await supabase.from("profiles").update({ age: next }).eq("id", user.id);
-      await refreshProfile();
-    }
+    toast.success("Your DIY recipe is ready.");
   }
 
   return (
