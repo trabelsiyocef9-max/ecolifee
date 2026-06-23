@@ -120,9 +120,11 @@ const HOBBY_RECIPES: Record<string, Record<Tier, string[]>> = {
 function ScannerPage() {
   const { isAuthenticated, user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const callGenerate = useServerFn(generateRecipe);
   const [hobby, setHobby] = useState<string>("");
   const [preview, setPreview] = useState<string | null>(null);
-  const [recipe, setRecipe] = useState<string[] | null>(null);
+  const [recipe, setRecipe] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -143,7 +145,7 @@ function ScannerPage() {
     setAgeReady(true);
   }, [isAuthenticated, loading, profile, navigate]);
 
-  const tier = useMemo(() => tierForAge(age), [age]);
+  const _tier = useMemo(() => age, [age]);
 
   if (!isAuthenticated || !ageReady) return null;
 
@@ -157,7 +159,7 @@ function ScannerPage() {
     setRecipe(null);
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!hobby) {
       toast.error("Choose a hobby to generate your recipe.");
       return;
@@ -166,9 +168,20 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
-    // Silently adapt to the user's saved age — no visible mention to the user.
-    setRecipe(HOBBY_RECIPES[hobby][tier]);
-    toast.success("Your DIY recipe is ready.");
+    // Silently retrieve the saved age — never displayed to the user.
+    const storedAge = Number(localStorage.getItem("userAge")) || age;
+    setGenerating(true);
+    setRecipe(null);
+    try {
+      const result = await callGenerate({ data: { age: storedAge, hobby } });
+      setRecipe(result.content);
+      toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not generate a recipe. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return (
