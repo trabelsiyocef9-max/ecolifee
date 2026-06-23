@@ -129,20 +129,6 @@ function AgeCheckPage() {
     navigate({ to: "/scanner" });
   }
 
-  async function handleConfirm() {
-    if (age == null || !user) return;
-    setSaving(true);
-    const { error: upsertErr } = await supabase
-      .from("profiles")
-      .upsert({ id: user.id, age }, { onConflict: "id" });
-    setSaving(false);
-    if (upsertErr) {
-      toast.error("We couldn't save your age. Please try again.");
-      return;
-    }
-    await refreshProfile();
-    navigate({ to: "/scanner" });
-  }
 
   useEffect(() => () => stopStream(), []);
 
