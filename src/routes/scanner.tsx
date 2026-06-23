@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Upload, Sparkles } from "lucide-react";
+import { Camera, Upload, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { generateRecipe } from "@/lib/recipe.functions";
 
 export const Route = createFileRoute("/scanner")({
   head: () => ({
