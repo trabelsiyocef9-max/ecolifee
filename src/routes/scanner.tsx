@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Upload, Sparkles } from "lucide-react";
+import { Camera, Upload, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { generateRecipe } from "@/lib/recipe.functions";
 
 export const Route = createFileRoute("/scanner")({
   head: () => ({
@@ -119,9 +120,11 @@ const HOBBY_RECIPES: Record<string, Record<Tier, string[]>> = {
 function ScannerPage() {
   const { isAuthenticated, user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const callGenerate = useServerFn(generateRecipe);
   const [hobby, setHobby] = useState<string>("");
   const [preview, setPreview] = useState<string | null>(null);
-  const [recipe, setRecipe] = useState<string[] | null>(null);
+  const [recipe, setRecipe] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -142,7 +145,7 @@ function ScannerPage() {
     setAgeReady(true);
   }, [isAuthenticated, loading, profile, navigate]);
 
-  const tier = useMemo(() => tierForAge(age), [age]);
+  const _tier = useMemo(() => age, [age]);
 
   if (!isAuthenticated || !ageReady) return null;
 
@@ -156,7 +159,7 @@ function ScannerPage() {
     setRecipe(null);
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!hobby) {
       toast.error("Choose a hobby to generate your recipe.");
       return;
@@ -165,9 +168,20 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
-    // Silently adapt to the user's saved age — no visible mention to the user.
-    setRecipe(HOBBY_RECIPES[hobby][tier]);
-    toast.success("Your DIY recipe is ready.");
+    // Silently retrieve the saved age — never displayed to the user.
+    const storedAge = Number(localStorage.getItem("userAge")) || age;
+    setGenerating(true);
+    setRecipe(null);
+    try {
+      const result = await callGenerate({ data: { age: storedAge, hobby } });
+      setRecipe(result.content);
+      toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not generate a recipe. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return (
@@ -237,28 +251,49 @@ function ScannerPage() {
               type="button"
               size="lg"
               onClick={handleGenerate}
+              disabled={generating}
               className="mt-8 h-12 rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate DIY Recipe
+              {generating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  AI Architecting…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate DIY Recipe
+                </>
+              )}
             </Button>
           </div>
         </div>
 
-        {recipe && (
-          <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card p-10 shadow-[var(--shadow-elegant)]">
+        {generating && (
+          <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/60 p-10 text-center shadow-[var(--shadow-elegant)] backdrop-blur-md">
+            <Loader2 className="mx-auto h-6 w-6 animate-spin text-[color:var(--sage)]" />
+            <p className="mt-4 font-serif text-lg text-foreground/80">AI Architecting your project…</p>
+          </div>
+        )}
+
+        {recipe && !generating && (
+          <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/70 p-10 shadow-[var(--shadow-elegant)] backdrop-blur-md">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">Your recipe</p>
             <h3 className="mt-2 font-serif text-3xl text-foreground">Step by step</h3>
-            <ol className="mt-8 space-y-6">
-              {recipe.map((step, i) => (
-                <li key={i} className="flex gap-5">
-                  <span className="font-serif text-sm tracking-widest text-[color:var(--sage)]">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <p className="text-base font-light leading-relaxed text-foreground/80">{step}</p>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-8 space-y-4 font-sans text-base font-light leading-relaxed text-foreground/85">
+              {recipe.split(/\n+/).map((line, i) => {
+                const trimmed = line.trim();
+                if (!trimmed) return null;
+                if (/^#{1,6}\s/.test(trimmed) || /^\*\*.+\*\*$/.test(trimmed)) {
+                  return (
+                    <h4 key={i} className="font-serif text-xl text-foreground">
+                      {trimmed.replace(/^#{1,6}\s*/, "").replace(/^\*\*|\*\*$/g, "")}
+                    </h4>
+                  );
+                }
+                return <p key={i}>{trimmed}</p>;
+              })}
+            </div>
           </div>
         )}
       </section>
