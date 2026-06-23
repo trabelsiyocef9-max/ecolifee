@@ -183,22 +183,8 @@ function AgeCheckPage() {
             </Button>
           )}
 
-          {phase === "result" && age != null && (
-            <>
-              <p className="text-center font-serif text-2xl text-foreground">
-                Starter age: <span className="text-[color:var(--clay)]">{age}</span>
-              </p>
-              <Button
-                type="button"
-                size="lg"
-                onClick={handleConfirm}
-                disabled={saving}
-                className="h-12 rounded-full bg-[color:var(--clay)] px-8 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
-              >
-                {saving ? "Saving…" : "Confirm & continue"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </>
+          {phase === "scanning" && saving && (
+            <p className="text-center text-sm text-foreground/60">Saving your profile…</p>
           )}
         </div>
       </section>
