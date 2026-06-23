@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Upload, Sparkles, ArrowRight } from "lucide-react";
+import { Camera, Upload, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
