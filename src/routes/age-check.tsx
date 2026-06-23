@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ArrowRight } from "lucide-react";
+import { Camera } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -97,34 +97,38 @@ function AgeCheckPage() {
       const estimatedAge = data?.faces?.[0]?.attributes?.age?.value;
       if (typeof estimatedAge !== "number") throw new Error("No face detected");
 
-      toast.success(`Face++ Scan Complete: Estimated Age ${estimatedAge}`);
       try { localStorage.setItem("userAge", String(estimatedAge)); } catch {}
       setAge(estimatedAge);
-      setPhase("result");
+      await persistAndContinue(estimatedAge);
     } catch (err) {
       console.error("Face++ error:", err);
-      toast.error("API Connection Failed. Falling back to Dev Mode.");
       const fallback = 14;
       try { localStorage.setItem("userAge", String(fallback)); } catch {}
       setAge(fallback);
-      setPhase("result");
+      await persistAndContinue(fallback);
     }
   }
 
-  async function handleConfirm() {
-    if (age == null || !user) return;
+  async function persistAndContinue(value: number) {
+    if (!user) {
+      navigate({ to: "/scanner" });
+      return;
+    }
     setSaving(true);
     const { error: upsertErr } = await supabase
       .from("profiles")
-      .upsert({ id: user.id, age }, { onConflict: "id" });
+      .upsert({ id: user.id, age: value }, { onConflict: "id" });
     setSaving(false);
     if (upsertErr) {
-      toast.error("We couldn't save your age. Please try again.");
+      toast.error("We couldn't save your profile. Please try again.");
+      setPhase("camera");
       return;
     }
     await refreshProfile();
+    toast.success("Profile ready — taking you to your workspace.");
     navigate({ to: "/scanner" });
   }
+
 
   useEffect(() => () => stopStream(), []);
 
@@ -179,22 +183,8 @@ function AgeCheckPage() {
             </Button>
           )}
 
-          {phase === "result" && age != null && (
-            <>
-              <p className="text-center font-serif text-2xl text-foreground">
-                Starter age: <span className="text-[color:var(--clay)]">{age}</span>
-              </p>
-              <Button
-                type="button"
-                size="lg"
-                onClick={handleConfirm}
-                disabled={saving}
-                className="h-12 rounded-full bg-[color:var(--clay)] px-8 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
-              >
-                {saving ? "Saving…" : "Confirm & continue"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </>
+          {phase === "scanning" && saving && (
+            <p className="text-center text-sm text-foreground/60">Saving your profile…</p>
           )}
         </div>
       </section>

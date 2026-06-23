@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Upload, Sparkles, ArrowRight } from "lucide-react";
+import { Camera, Upload, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -118,7 +117,7 @@ const HOBBY_RECIPES: Record<string, Record<Tier, string[]>> = {
 };
 
 function ScannerPage() {
-  const { isAuthenticated, user, profile, loading, refreshProfile } = useAuth();
+  const { isAuthenticated, user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [hobby, setHobby] = useState<string>("");
   const [preview, setPreview] = useState<string | null>(null);
@@ -166,18 +165,9 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
+    // Silently adapt to the user's saved age — no visible mention to the user.
     setRecipe(HOBBY_RECIPES[hobby][tier]);
-    toast.success(`Recipe tuned for a ${age}-year-old maker.`);
-  }
-
-  async function handleOverride(value: number[]) {
-    const next = value[0] ?? age;
-    setAge(next);
-    setRecipe(null);
-    if (user) {
-      await supabase.from("profiles").update({ age: next }).eq("id", user.id);
-      await refreshProfile();
-    }
+    toast.success("Your DIY recipe is ready.");
   }
 
   return (
@@ -185,11 +175,6 @@ function ScannerPage() {
       <NavBar />
 
       <section className="mx-auto w-full max-w-5xl px-6 py-16 md:px-10 md:py-24">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--sage)]/30 bg-[color:var(--sage)]/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--sage)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--sage)]" />
-          Maker Profile: {age} Years Old
-        </div>
-
         <p className="mb-5 text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">
           Workspace
         </p>
@@ -198,7 +183,7 @@ function ScannerPage() {
         </h1>
         <p className="mt-4 max-w-xl text-base font-light text-foreground/70">
           Pick a hobby, upload a photo of the item you'd like to upcycle, and we'll
-          draft a step-by-step recipe tuned to your age and skill level.
+          draft a step-by-step recipe tuned to your skill level.
         </p>
 
         <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
@@ -245,7 +230,7 @@ function ScannerPage() {
               <p className="text-xs uppercase tracking-[0.18em] text-foreground/55">Next step</p>
               <h2 className="mt-2 font-serif text-2xl text-foreground">Generate your DIY recipe</h2>
               <p className="mt-3 text-sm font-light text-foreground/70">
-                We'll draft a step-by-step upcycle plan that's safe for a {age}-year-old to do independently.
+                We'll draft a step-by-step upcycle plan you can confidently do on your own.
               </p>
             </div>
             <Button
@@ -274,28 +259,8 @@ function ScannerPage() {
                 </li>
               ))}
             </ol>
-            <p className="mt-8 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-foreground/55">
-              <ArrowRight className="h-3 w-3" /> Tools and steps filtered for an independent {age}-year-old maker.
-            </p>
           </div>
         )}
-
-        <div className="mt-16 rounded-xl border border-dashed border-border/70 bg-card/40 p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <Label className="text-[10px] font-medium uppercase tracking-[0.22em] text-foreground/45">
-              Override Age (Dev Only)
-            </Label>
-            <span className="font-serif text-sm text-foreground/70">{age} yrs</span>
-          </div>
-          <Slider
-            min={8}
-            max={20}
-            step={1}
-            value={[age]}
-            onValueChange={handleOverride}
-            className="[&_[data-slot=slider-range]]:bg-[color:var(--clay)] [&_[data-slot=slider-thumb)]:border-[color:var(--clay)]"
-          />
-        </div>
       </section>
       <Toaster />
     </div>
