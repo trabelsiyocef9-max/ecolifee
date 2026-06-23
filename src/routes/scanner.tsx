@@ -251,28 +251,49 @@ function ScannerPage() {
               type="button"
               size="lg"
               onClick={handleGenerate}
+              disabled={generating}
               className="mt-8 h-12 rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate DIY Recipe
+              {generating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  AI Architecting…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate DIY Recipe
+                </>
+              )}
             </Button>
           </div>
         </div>
 
-        {recipe && (
-          <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card p-10 shadow-[var(--shadow-elegant)]">
+        {generating && (
+          <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/60 p-10 text-center shadow-[var(--shadow-elegant)] backdrop-blur-md">
+            <Loader2 className="mx-auto h-6 w-6 animate-spin text-[color:var(--sage)]" />
+            <p className="mt-4 font-serif text-lg text-foreground/80">AI Architecting your project…</p>
+          </div>
+        )}
+
+        {recipe && !generating && (
+          <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/70 p-10 shadow-[var(--shadow-elegant)] backdrop-blur-md">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">Your recipe</p>
             <h3 className="mt-2 font-serif text-3xl text-foreground">Step by step</h3>
-            <ol className="mt-8 space-y-6">
-              {recipe.map((step, i) => (
-                <li key={i} className="flex gap-5">
-                  <span className="font-serif text-sm tracking-widest text-[color:var(--sage)]">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <p className="text-base font-light leading-relaxed text-foreground/80">{step}</p>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-8 space-y-4 font-sans text-base font-light leading-relaxed text-foreground/85">
+              {recipe.split(/\n+/).map((line, i) => {
+                const trimmed = line.trim();
+                if (!trimmed) return null;
+                if (/^#{1,6}\s/.test(trimmed) || /^\*\*.+\*\*$/.test(trimmed)) {
+                  return (
+                    <h4 key={i} className="font-serif text-xl text-foreground">
+                      {trimmed.replace(/^#{1,6}\s*/, "").replace(/^\*\*|\*\*$/g, "")}
+                    </h4>
+                  );
+                }
+                return <p key={i}>{trimmed}</p>;
+              })}
+            </div>
           </div>
         )}
       </section>
