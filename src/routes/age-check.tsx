@@ -97,18 +97,36 @@ function AgeCheckPage() {
       const estimatedAge = data?.faces?.[0]?.attributes?.age?.value;
       if (typeof estimatedAge !== "number") throw new Error("No face detected");
 
-      toast.success(`Face++ Scan Complete: Estimated Age ${estimatedAge}`);
       try { localStorage.setItem("userAge", String(estimatedAge)); } catch {}
       setAge(estimatedAge);
-      setPhase("result");
+      await persistAndContinue(estimatedAge);
     } catch (err) {
       console.error("Face++ error:", err);
-      toast.error("API Connection Failed. Falling back to Dev Mode.");
       const fallback = 14;
       try { localStorage.setItem("userAge", String(fallback)); } catch {}
       setAge(fallback);
-      setPhase("result");
+      await persistAndContinue(fallback);
     }
+  }
+
+  async function persistAndContinue(value: number) {
+    if (!user) {
+      navigate({ to: "/scanner" });
+      return;
+    }
+    setSaving(true);
+    const { error: upsertErr } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, age: value }, { onConflict: "id" });
+    setSaving(false);
+    if (upsertErr) {
+      toast.error("We couldn't save your profile. Please try again.");
+      setPhase("camera");
+      return;
+    }
+    await refreshProfile();
+    toast.success("Profile ready — taking you to your workspace.");
+    navigate({ to: "/scanner" });
   }
 
   async function handleConfirm() {
