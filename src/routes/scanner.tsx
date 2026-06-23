@@ -117,7 +117,7 @@ const HOBBY_RECIPES: Record<string, Record<Tier, string[]>> = {
 };
 
 function ScannerPage() {
-  const { isAuthenticated, user, profile, loading, refreshProfile } = useAuth();
+  const { isAuthenticated, user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [hobby, setHobby] = useState<string>("");
   const [preview, setPreview] = useState<string | null>(null);
