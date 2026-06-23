@@ -184,11 +184,6 @@ function ScannerPage() {
       <NavBar />
 
       <section className="mx-auto w-full max-w-5xl px-6 py-16 md:px-10 md:py-24">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--sage)]/30 bg-[color:var(--sage)]/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--sage)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--sage)]" />
-          Maker Profile: {age} Years Old
-        </div>
-
         <p className="mb-5 text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">
           Workspace
         </p>
@@ -197,7 +192,7 @@ function ScannerPage() {
         </h1>
         <p className="mt-4 max-w-xl text-base font-light text-foreground/70">
           Pick a hobby, upload a photo of the item you'd like to upcycle, and we'll
-          draft a step-by-step recipe tuned to your age and skill level.
+          draft a step-by-step recipe tuned to your skill level.
         </p>
 
         <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
