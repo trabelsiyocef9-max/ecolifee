@@ -239,7 +239,7 @@ function ScannerPage() {
               <p className="text-xs uppercase tracking-[0.18em] text-foreground/55">Next step</p>
               <h2 className="mt-2 font-serif text-2xl text-foreground">Generate your DIY recipe</h2>
               <p className="mt-3 text-sm font-light text-foreground/70">
-                We'll draft a step-by-step upcycle plan that's safe for a {age}-year-old to do independently.
+                We'll draft a step-by-step upcycle plan you can confidently do on your own.
               </p>
             </div>
             <Button
@@ -268,28 +268,8 @@ function ScannerPage() {
                 </li>
               ))}
             </ol>
-            <p className="mt-8 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-foreground/55">
-              <ArrowRight className="h-3 w-3" /> Tools and steps filtered for an independent {age}-year-old maker.
-            </p>
           </div>
         )}
-
-        <div className="mt-16 rounded-xl border border-dashed border-border/70 bg-card/40 p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <Label className="text-[10px] font-medium uppercase tracking-[0.22em] text-foreground/45">
-              Override Age (Dev Only)
-            </Label>
-            <span className="font-serif text-sm text-foreground/70">{age} yrs</span>
-          </div>
-          <Slider
-            min={8}
-            max={20}
-            step={1}
-            value={[age]}
-            onValueChange={handleOverride}
-            className="[&_[data-slot=slider-range]]:bg-[color:var(--clay)] [&_[data-slot=slider-thumb)]:border-[color:var(--clay)]"
-          />
-        </div>
       </section>
       <Toaster />
     </div>
