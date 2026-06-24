@@ -93,6 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "EcoLife — Turn household waste into DIY projects" },
+      { name: "description", content: "EcoLife AI transforms household waste into DIY projects for teens using computer vision and hobby-based AI." },
+      { property: "og:description", content: "EcoLife AI transforms household waste into DIY projects for teens using computer vision and hobby-based AI." },
+      { name: "twitter:description", content: "EcoLife AI transforms household waste into DIY projects for teens using computer vision and hobby-based AI." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85be6f46-6020-42df-b931-ecc87ba4d169/id-preview-5915a61a--e725bec1-6268-4194-96bf-b2fc5af29189.lovable.app-1782305555421.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85be6f46-6020-42df-b931-ecc87ba4d169/id-preview-5915a61a--e725bec1-6268-4194-96bf-b2fc5af29189.lovable.app-1782305555421.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
