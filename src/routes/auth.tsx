@@ -139,8 +139,8 @@ function AuthPage() {
 }
 
 function Field({
-  label, name, type, placeholder, error,
-}: { label: string; name: string; type: string; placeholder?: string; error?: string }) {
+  label, name, type, placeholder, error, autoComplete,
+}: { label: string; name: string; type: string; placeholder?: string; error?: string; autoComplete?: string }) {
   return (
     <div>
       <label htmlFor={name} className="block text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
@@ -151,6 +151,7 @@ function Field({
         name={name}
         type={type}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         className="mt-2 w-full border-0 border-b border-foreground bg-transparent px-0 py-3 font-serif text-lg text-foreground placeholder:text-foreground/30 focus:border-[color:var(--sage)] focus:outline-none focus:ring-0"
       />
       {error && (
@@ -159,3 +160,4 @@ function Field({
     </div>
   );
 }
+
