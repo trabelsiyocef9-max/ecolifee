@@ -282,7 +282,7 @@ function ScannerPage() {
               type="button"
               size="lg"
               onClick={handleGenerate}
-              disabled={generating}
+              disabled={generating || hobbies.length === 0}
               className="mt-8 h-12 rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
             >
               {generating ? (
