@@ -1,17 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Upload, Sparkles, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, Upload, Sparkles, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
