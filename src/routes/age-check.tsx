@@ -85,16 +85,7 @@ function AgeCheckPage() {
     const base64 = dataUrl.replace(/^data:image\/[a-z]+;base64,/, "");
 
     try {
-      const formData = new FormData();
-      formData.append("api_key", FACE_API_KEY);
-      formData.append("api_secret", FACE_API_SECRET);
-      formData.append("image_base64", base64);
-      formData.append("return_attributes", "age");
-
-      const res = await fetch(FACE_API_URL, { method: "POST", body: formData });
-      if (!res.ok) throw new Error(`Face++ responded ${res.status}`);
-      const data = await res.json();
-      const estimatedAge = data?.faces?.[0]?.attributes?.age?.value;
+      const { age: estimatedAge } = await callEstimateAge({ data: { imageBase64: base64 } });
       if (typeof estimatedAge !== "number") throw new Error("No face detected");
 
       try { localStorage.setItem("userAge", String(estimatedAge)); } catch {}
