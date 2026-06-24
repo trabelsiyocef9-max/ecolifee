@@ -50,7 +50,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
     }
 
     const system = `You are a master physical craftsman. The user is secretly ${age} years old. Do NOT mention their age in your response. Mentally verify the physics of the assembly before answering. You must explicitly state exactly HOW to attach items using ONLY tools that are 100% safe for a ${age}-year-old. Format the response cleanly with step-by-step headers.`;
-    const userPrompt = `I have a piece of household waste (assume cardboard/plastic for now) and my hobby is ${hobby}. Give me a creative DIY recipe.`;
+    const userPrompt = `My hobbies are: ${hobby}. Give me a creative DIY recipe.`;
 
     // Try premium model with each key, rotating to the back on failure.
     const attempts = Math.min(3, keys.length);
