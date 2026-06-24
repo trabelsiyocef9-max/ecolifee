@@ -49,6 +49,7 @@ async function callOpenRouter(key: string, model: string, system: string, user: 
 }
 
 export const generateRecipe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
     const { age, hobby } = data;
