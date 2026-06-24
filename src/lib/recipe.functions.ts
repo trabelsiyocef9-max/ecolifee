@@ -54,13 +54,18 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { age, hobby } = data;
 
-    // Round-robin key pool (keys live in server env as key1/key2/key3)
-    let keys = [process.env.key1, process.env.key2, process.env.key3].filter(
-      (k): k is string => typeof k === "string" && k.length > 0,
-    );
+    // API keys live ONLY in server env (Lovable Cloud secrets) — never shipped to the client.
+    // Preferred: a single OPENROUTER_API_KEY. Legacy key1/key2/key3 are kept as round-robin fallbacks.
+    let keys = [
+      process.env.OPENROUTER_API_KEY,
+      process.env.key1,
+      process.env.key2,
+      process.env.key3,
+    ].filter((k): k is string => typeof k === "string" && k.length > 0);
     if (keys.length === 0) {
-      throw new Error("No OpenRouter API keys configured on the server.");
+      throw new Error("No OpenRouter API key configured. Add OPENROUTER_API_KEY in project secrets.");
     }
+
 
     const system = `You are a master physical craftsman. The user is secretly ${age} years old. Do NOT mention their age in your response. Mentally verify the physics of the assembly before answering. You must explicitly state exactly HOW to attach items using ONLY tools that are 100% safe for a ${age}-year-old. Format the response cleanly with step-by-step headers.`;
     const userPrompt = `My hobbies are: ${hobby}. Give me a creative DIY recipe.`;
