@@ -98,10 +98,11 @@ function AuthPage() {
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-8">
           {mode === "signup" && (
-            <Field label="Name" name="name" type="text" error={errors.name} />
+            <Field label="Name" name="name" type="text" autoComplete="name" error={errors.name} />
           )}
-          <Field label="Email" name="email" type="email" placeholder="you@earth.io" error={errors.email} />
-          <Field label="Password" name="password" type="password" error={errors.password} />
+          <Field label="Email" name="email" type="email" autoComplete="email" placeholder="you@earth.io" error={errors.email} />
+          <Field label="Password" name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} error={errors.password} />
+
 
           <div className="pt-2">
             <Button
