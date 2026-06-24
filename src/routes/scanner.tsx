@@ -115,7 +115,8 @@ function ScannerPage() {
   const { isAuthenticated, user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const callGenerate = useServerFn(generateRecipe);
-  const [hobby, setHobby] = useState<string>("");
+  const [hobbies, setHobbies] = useState<string[]>([]);
+  const [hobbyInput, setHobbyInput] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -130,7 +131,7 @@ function ScannerPage() {
       navigate({ to: "/auth" });
       return;
     }
-    if (profile === null) return; // still loading profile
+    if (profile === null) return;
     if (profile.age == null) {
       navigate({ to: "/age-check" });
       return;
@@ -138,8 +139,6 @@ function ScannerPage() {
     setAge(profile.age);
     setAgeReady(true);
   }, [isAuthenticated, loading, profile, navigate]);
-
-  const _tier = useMemo(() => age, [age]);
 
   if (!isAuthenticated || !ageReady) return null;
 
@@ -153,21 +152,36 @@ function ScannerPage() {
     setRecipe(null);
   }
 
+  function addHobby() {
+    const value = hobbyInput.trim();
+    if (!value) return;
+    if (hobbies.some((h) => h.toLowerCase() === value.toLowerCase())) {
+      setHobbyInput("");
+      return;
+    }
+    setHobbies((prev) => [...prev, value]);
+    setHobbyInput("");
+  }
+
+  function removeHobby(h: string) {
+    setHobbies((prev) => prev.filter((x) => x !== h));
+  }
+
   async function handleGenerate() {
-    if (!hobby) {
-      toast.error("Choose a hobby to generate your recipe.");
+    if (hobbies.length === 0) {
+      toast.error("Add at least one hobby first.");
       return;
     }
     if (!preview) {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
-    // Silently retrieve the saved age — never displayed to the user.
     const storedAge = Number(localStorage.getItem("userAge")) || age;
+    const joined = hobbies.join(", ");
     setGenerating(true);
     setRecipe(null);
     try {
-      const result = await callGenerate({ data: { age: storedAge, hobby } });
+      const result = await callGenerate({ data: { age: storedAge, hobby: joined } });
       setRecipe(result.content);
       toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
     } catch (err) {
@@ -190,25 +204,48 @@ function ScannerPage() {
           Hi {displayName.split(" ")[0]} — what are we remaking today?
         </h1>
         <p className="mt-4 max-w-xl text-base font-light text-foreground/70">
-          Pick a hobby, upload a photo of the item you'd like to upcycle, and we'll
-          draft a step-by-step recipe tuned to your skill level.
+          Add the hobbies that inspire you, upload a photo of the item you'd like to upcycle,
+          and we'll draft a step-by-step recipe tuned to your skill level.
         </p>
 
         <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
-              Select your hobby
+              Your hobbies
             </Label>
-            <Select value={hobby} onValueChange={setHobby}>
-              <SelectTrigger id="hobby" className="h-12 rounded-none border-0 border-b border-foreground bg-transparent px-0 font-serif text-lg shadow-none focus:ring-0">
-                <SelectValue placeholder="Choose one…" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gaming">Gaming</SelectItem>
-                <SelectItem value="art">Art</SelectItem>
-                <SelectItem value="gardening">Gardening</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="hobby"
+              value={hobbyInput}
+              onChange={(e) => setHobbyInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addHobby();
+                }
+              }}
+              placeholder="Type a hobby (e.g. Gaming, Art) and press Enter..."
+              className="h-12 rounded-full border border-[#E5E3D8] bg-transparent px-5 font-sans text-base shadow-none focus-visible:ring-0 focus-visible:border-[color:var(--sage)]"
+            />
+            {hobbies.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {hobbies.map((h) => (
+                  <span
+                    key={h}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#8FA89B]/20 px-3 py-1 text-sm text-[#1B261E]"
+                  >
+                    {h}
+                    <button
+                      type="button"
+                      onClick={() => removeHobby(h)}
+                      aria-label={`Remove ${h}`}
+                      className="rounded-full p-0.5 transition hover:bg-[#1B261E]/10"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
