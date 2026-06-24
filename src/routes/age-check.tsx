@@ -24,6 +24,7 @@ export const Route = createFileRoute("/age-check")({
 type Phase = "camera" | "scanning" | "result";
 
 function AgeCheckPage() {
+  const callEstimateAge = useServerFn(estimateAge);
   const { isAuthenticated, user, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
