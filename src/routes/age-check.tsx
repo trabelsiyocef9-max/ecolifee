@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
@@ -7,10 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { estimateAge } from "@/lib/age-check.functions";
 
-const FACE_API_KEY = "zC3Do2HuNEgSD0LX4FC9sGtmd0f-1ggY";
-const FACE_API_SECRET = "xtgHRXkjBSjS-ZNRjEd0qvZSwzGyyZ9c";
-const FACE_API_URL = "https://api-us.faceplusplus.com/facepp/v3/detect";
 
 export const Route = createFileRoute("/age-check")({
   head: () => ({
@@ -25,6 +24,7 @@ export const Route = createFileRoute("/age-check")({
 type Phase = "camera" | "scanning" | "result";
 
 function AgeCheckPage() {
+  const callEstimateAge = useServerFn(estimateAge);
   const { isAuthenticated, user, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -85,16 +85,7 @@ function AgeCheckPage() {
     const base64 = dataUrl.replace(/^data:image\/[a-z]+;base64,/, "");
 
     try {
-      const formData = new FormData();
-      formData.append("api_key", FACE_API_KEY);
-      formData.append("api_secret", FACE_API_SECRET);
-      formData.append("image_base64", base64);
-      formData.append("return_attributes", "age");
-
-      const res = await fetch(FACE_API_URL, { method: "POST", body: formData });
-      if (!res.ok) throw new Error(`Face++ responded ${res.status}`);
-      const data = await res.json();
-      const estimatedAge = data?.faces?.[0]?.attributes?.age?.value;
+      const { age: estimatedAge } = await callEstimateAge({ data: { imageBase64: base64 } });
       if (typeof estimatedAge !== "number") throw new Error("No face detected");
 
       try { localStorage.setItem("userAge", String(estimatedAge)); } catch {}

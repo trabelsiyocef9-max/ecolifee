@@ -1,10 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+
+// Each tag must be short and contain only letters/spaces/hyphens.
+// Multiple tags arrive as a comma-separated string from the UI.
+const HOBBY_TAG = /^[A-Za-z][A-Za-z \-]{0,29}$/;
 
 const Input = z.object({
   age: z.number().int().min(4).max(120),
-  hobby: z.string().min(1).max(80),
+  hobby: z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((s) => s.split(",").map((t) => t.trim()).filter(Boolean))
+    .pipe(z.array(z.string().regex(HOBBY_TAG)).min(1).max(8))
+    .transform((tags) => tags.join(", ")),
 });
+
 
 const PREMIUM_MODEL = "openai/gpt-4o";
 const FREE_MODEL = "meta-llama/llama-3-8b-instruct:free";
@@ -37,6 +49,7 @@ async function callOpenRouter(key: string, model: string, system: string, user: 
 }
 
 export const generateRecipe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
     const { age, hobby } = data;
