@@ -123,6 +123,8 @@ function ScannerPage() {
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const hydratedRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
@@ -141,9 +143,40 @@ function ScannerPage() {
     setAgeReady(true);
   }, [isAuthenticated, loading, profile, navigate]);
 
+  // Hydrate hobbies from user_metadata on load
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      const saved = data.user?.user_metadata?.hobbies;
+      if (Array.isArray(saved)) {
+        setHobbies(saved.filter((h): h is string => typeof h === "string"));
+      }
+      hydratedRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
   if (!isAuthenticated || !ageReady) return null;
 
   const displayName = (profile?.name || user?.user_metadata?.name || user?.email || "friend") as string;
+
+  async function syncHobbies(next: string[]) {
+    setSyncStatus("saving");
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { hobbies: next } });
+      if (error) throw error;
+      setSyncStatus("saved");
+    } catch (err) {
+      console.error("Failed to sync hobbies", err);
+      setSyncStatus("idle");
+    }
+  }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -160,12 +193,16 @@ function ScannerPage() {
       setHobbyInput("");
       return;
     }
-    setHobbies((prev) => [...prev, value]);
+    const next = [...hobbies, value];
+    setHobbies(next);
     setHobbyInput("");
+    void syncHobbies(next);
   }
 
   function removeHobby(h: string) {
-    setHobbies((prev) => prev.filter((x) => x !== h));
+    const next = hobbies.filter((x) => x !== h);
+    setHobbies(next);
+    void syncHobbies(next);
   }
 
   async function handleGenerate() {
