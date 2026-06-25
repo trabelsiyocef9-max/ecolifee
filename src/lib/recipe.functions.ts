@@ -23,12 +23,13 @@ const FREE_MODEL = "meta-llama/llama-3-8b-instruct:free";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 async function callOpenRouter(key: string, model: string, system: string, user: string) {
+  console.log("[generateRecipe] POST", ENDPOINT, "model:", model, "keyLen:", key.length);
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "http://localhost:3000",
+      "HTTP-Referer": "https://ecolifee.lovable.app",
       "X-Title": "EcoLife",
     },
     body: JSON.stringify({
@@ -39,12 +40,18 @@ async function callOpenRouter(key: string, model: string, system: string, user: 
       ],
     }),
   });
+  console.log("[generateRecipe] OpenRouter status:", res.status);
   if (!res.ok) {
+    const bodyText = await res.text().catch(() => "");
+    console.log("[generateRecipe] OpenRouter error body:", bodyText.slice(0, 500));
     throw new Error(`OpenRouter ${res.status}`);
   }
   const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Empty response");
+  if (!content) {
+    console.log("[generateRecipe] Empty content from OpenRouter");
+    throw new Error("Empty response");
+  }
   return content;
 }
 
@@ -68,6 +75,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
       throw new Error("No OpenRouter API key configured. Add OPENROUTER_API_KEY in project secrets.");
     }
 
+    console.log("[generateRecipe] keys available:", keys.length);
 
     const system = `You are a master physical craftsman. The user is secretly ${age} years old. Do NOT mention their age in your response. Mentally verify the physics of the assembly before answering. You must explicitly state exactly HOW to attach items using ONLY tools that are 100% safe for a ${age}-year-old. Format the response cleanly with step-by-step headers.`;
     const userPrompt = `My hobbies are: ${hobby}. Give me a creative DIY recipe.`;
@@ -79,12 +87,14 @@ export const generateRecipe = createServerFn({ method: "POST" })
         const content = await callOpenRouter(keys[0]!, PREMIUM_MODEL, system, userPrompt);
         return { content, model: PREMIUM_MODEL, degraded: false };
       } catch (err) {
+        console.log("[generateRecipe] premium attempt", i + 1, "failed:", (err as Error).message);
         const first = keys.shift()!;
         keys.push(first);
       }
     }
 
     // Degrade to free model as a final attempt.
+    console.log("[generateRecipe] degrading to free model");
     const content = await callOpenRouter(keys[0]!, FREE_MODEL, system, userPrompt);
     return { content, model: FREE_MODEL, degraded: true };
   });
