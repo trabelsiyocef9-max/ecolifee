@@ -75,6 +75,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
       throw new Error("No OpenRouter API key configured. Add OPENROUTER_API_KEY in project secrets.");
     }
 
+    console.log("[generateRecipe] keys available:", keys.length);
 
     const system = `You are a master physical craftsman. The user is secretly ${age} years old. Do NOT mention their age in your response. Mentally verify the physics of the assembly before answering. You must explicitly state exactly HOW to attach items using ONLY tools that are 100% safe for a ${age}-year-old. Format the response cleanly with step-by-step headers.`;
     const userPrompt = `My hobbies are: ${hobby}. Give me a creative DIY recipe.`;
@@ -86,12 +87,14 @@ export const generateRecipe = createServerFn({ method: "POST" })
         const content = await callOpenRouter(keys[0]!, PREMIUM_MODEL, system, userPrompt);
         return { content, model: PREMIUM_MODEL, degraded: false };
       } catch (err) {
+        console.log("[generateRecipe] premium attempt", i + 1, "failed:", (err as Error).message);
         const first = keys.shift()!;
         keys.push(first);
       }
     }
 
     // Degrade to free model as a final attempt.
+    console.log("[generateRecipe] degrading to free model");
     const content = await callOpenRouter(keys[0]!, FREE_MODEL, system, userPrompt);
     return { content, model: FREE_MODEL, degraded: true };
   });
