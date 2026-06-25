@@ -248,9 +248,30 @@ function ScannerPage() {
 
         <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
           <div className="flex flex-col gap-3">
-            <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
-              Your hobbies
-            </Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+                Your hobbies
+              </Label>
+              {syncStatus !== "idle" && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-light tracking-wide"
+                  style={{ color: "#dce1db" }}
+                  aria-live="polite"
+                >
+                  {syncStatus === "saving" ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Saving profile…
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Saved to profile
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
             <Input
               id="hobby"
               value={hobbyInput}
