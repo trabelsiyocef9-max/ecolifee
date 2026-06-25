@@ -58,6 +58,8 @@ export const generateRecipe = createServerFn({ method: "POST" })
     // Preferred: a single OPENROUTER_API_KEY. Legacy key1/key2/key3 are kept as round-robin fallbacks.
     let keys = [
       process.env.OPENROUTER_API_KEY,
+      process.env.OPENROUTER_API_KEY_2,
+      process.env.OPENROUTER_API_KEY_3,
       process.env.key1,
       process.env.key2,
       process.env.key3,
