@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Upload, Sparkles, Loader2, X } from "lucide-react";
+import { Camera, Upload, Sparkles, Loader2, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { generateRecipe } from "@/lib/recipe.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/scanner")({
   head: () => ({
@@ -122,6 +123,8 @@ function ScannerPage() {
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const hydratedRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
@@ -140,9 +143,40 @@ function ScannerPage() {
     setAgeReady(true);
   }, [isAuthenticated, loading, profile, navigate]);
 
+  // Hydrate hobbies from user_metadata on load
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      const saved = data.user?.user_metadata?.hobbies;
+      if (Array.isArray(saved)) {
+        setHobbies(saved.filter((h): h is string => typeof h === "string"));
+      }
+      hydratedRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
   if (!isAuthenticated || !ageReady) return null;
 
   const displayName = (profile?.name || user?.user_metadata?.name || user?.email || "friend") as string;
+
+  async function syncHobbies(next: string[]) {
+    setSyncStatus("saving");
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { hobbies: next } });
+      if (error) throw error;
+      setSyncStatus("saved");
+    } catch (err) {
+      console.error("Failed to sync hobbies", err);
+      setSyncStatus("idle");
+    }
+  }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -159,12 +193,16 @@ function ScannerPage() {
       setHobbyInput("");
       return;
     }
-    setHobbies((prev) => [...prev, value]);
+    const next = [...hobbies, value];
+    setHobbies(next);
     setHobbyInput("");
+    void syncHobbies(next);
   }
 
   function removeHobby(h: string) {
-    setHobbies((prev) => prev.filter((x) => x !== h));
+    const next = hobbies.filter((x) => x !== h);
+    setHobbies(next);
+    void syncHobbies(next);
   }
 
   async function handleGenerate() {
@@ -210,9 +248,30 @@ function ScannerPage() {
 
         <div className="mt-12 grid gap-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)] md:p-10">
           <div className="flex flex-col gap-3">
-            <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
-              Your hobbies
-            </Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="hobby" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+                Your hobbies
+              </Label>
+              {syncStatus !== "idle" && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-light tracking-wide"
+                  style={{ color: "#dce1db" }}
+                  aria-live="polite"
+                >
+                  {syncStatus === "saving" ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Saving profile…
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Saved to profile
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
             <Input
               id="hobby"
               value={hobbyInput}
