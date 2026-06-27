@@ -18,8 +18,8 @@ const Input = z.object({
 });
 
 
-const PREMIUM_MODEL = "anthropic/claude-3.5-sonnet";
-const FREE_MODEL = "meta-llama/llama-3-8b-instruct:free";
+const PREMIUM_MODEL = "anthropic/claude-3.5-sonnet-20241022";
+const FREE_MODEL = "meta-llama/llama-3.1-8b-instruct:free";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 async function callOpenRouter(key: string, model: string, system: string, user: string) {
