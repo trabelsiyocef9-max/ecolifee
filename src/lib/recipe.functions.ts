@@ -17,7 +17,7 @@ const Input = z.object({
     .transform((tags) => tags.join(", ")),
 });
 
-const GEMINI_MODEL = "gemini-3-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Last-resort fallback only if Gemini itself is down (not for missing slugs/credits).
