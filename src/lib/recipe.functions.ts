@@ -15,6 +15,13 @@ const Input = z.object({
     .transform((s) => s.split(",").map((t) => t.trim()).filter(Boolean))
     .pipe(z.array(z.string().regex(HOBBY_TAG)).min(1).max(8))
     .transform((tags) => tags.join(", ")),
+  tools: z
+    .string()
+    .max(300)
+    .optional()
+    .transform((s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean))
+    .pipe(z.array(z.string().regex(HOBBY_TAG)).max(12))
+    .transform((tags) => tags.join(", ")),
 });
 
 const GEMINI_MODEL = "gemini-2.5-flash";
