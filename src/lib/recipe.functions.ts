@@ -118,7 +118,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
-    const { age, hobby, tools } = data;
+    const { age, hobby, tools, image, imageMime } = data;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
@@ -139,14 +139,31 @@ ${tools ? `IMPORTANT: The user has explicitly told you they own these tools: ${t
 
 Write clean, step-by-step instructions for the craft project. Do not mention or restate the user's age in your response — just apply the safety filtering silently to your tool choices.`;
 
-    const userPrompt = `I have this item to upcycle, and my hobbies are: ${hobby}.${tools ? ` The tools I have available: ${tools}.` : ""} Give me a creative DIY upcycling project using this item.`;
+    const userPrompt = [
+      `USER PROFILE`,
+      `- Approximate age: ${age}`,
+      `- Hobbies: ${hobby}`,
+      `- Tools available: ${tools || "(none listed — assume basic household supplies)"}`,
+      ``,
+      image
+        ? `ITEM TO UPCYCLE: See the attached photo. First, briefly identify what the item is (one short line), then design a creative DIY upcycling project that reuses THAT specific item. Tie the project to the user's hobbies above, and only use tools they have (or safe household alternatives). Return clear, numbered step-by-step instructions.`
+        : `ITEM TO UPCYCLE: (no photo attached) Ask the user to upload a photo, or design a generic project tied to their hobbies above.`,
+    ].join("\n");
+
+    console.log("[generateRecipe] Prompt inputs — age:", age, "| hobbies:", hobby, "| tools:", tools || "(none)", "| image:", image ? `${imageMime} ${Math.round((image.length * 3) / 4 / 1024)}KB` : "none");
 
     try {
-      const content = await callGemini(geminiKey, system, userPrompt);
+      const content = await callGemini(
+        geminiKey,
+        system,
+        userPrompt,
+        image && imageMime ? { data: image, mime: imageMime } : undefined,
+      );
       return { content, model: GEMINI_MODEL, degraded: false };
     } catch (err) {
       console.log("[generateRecipe] Gemini failed, trying OpenRouter fallback:", (err as Error).message);
     }
+
 
     // Last-resort fallback only if Gemini itself errored out.
     const fallbackKeys = [
