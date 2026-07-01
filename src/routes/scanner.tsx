@@ -118,12 +118,15 @@ function ScannerPage() {
   const callGenerate = useServerFn(generateRecipe);
   const [hobbies, setHobbies] = useState<string[]>([]);
   const [hobbyInput, setHobbyInput] = useState("");
+  const [tools, setTools] = useState<string[]>([]);
+  const [toolInput, setToolInput] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [toolsSyncStatus, setToolsSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
   const hydratedRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
