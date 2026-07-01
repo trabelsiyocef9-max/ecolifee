@@ -191,7 +191,22 @@ function ScannerPage() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
+    setImageFile(file);
     setRecipe(null);
+  }
+
+  async function fileToBase64(file: File): Promise<{ data: string; mime: string }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const [meta, data] = result.split(",");
+        const mime = /data:(.*?);base64/.exec(meta)?.[1] || file.type || "image/jpeg";
+        resolve({ data, mime });
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
   function addHobby() {
