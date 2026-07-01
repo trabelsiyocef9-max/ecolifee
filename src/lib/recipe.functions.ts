@@ -22,6 +22,8 @@ const Input = z.object({
     .transform((s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean))
     .pipe(z.array(z.string().regex(HOBBY_TAG)).max(12))
     .transform((tags) => tags.join(", ")),
+  image: z.string().min(1).max(8_000_000).optional(),
+  imageMime: z.string().regex(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i).optional(),
 });
 
 const GEMINI_MODEL = "gemini-2.5-flash";
