@@ -154,9 +154,13 @@ function ScannerPage() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (cancelled) return;
-      const saved = data.user?.user_metadata?.hobbies;
-      if (Array.isArray(saved)) {
-        setHobbies(saved.filter((h): h is string => typeof h === "string"));
+      const savedHobbies = data.user?.user_metadata?.hobbies;
+      if (Array.isArray(savedHobbies)) {
+        setHobbies(savedHobbies.filter((h): h is string => typeof h === "string"));
+      }
+      const savedTools = data.user?.user_metadata?.tools;
+      if (Array.isArray(savedTools)) {
+        setTools(savedTools.filter((t): t is string => typeof t === "string"));
       }
       hydratedRef.current = true;
     })();
