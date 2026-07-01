@@ -264,7 +264,7 @@ function ScannerPage() {
       toast.error("Add at least one hobby first.");
       return;
     }
-    if (!preview) {
+    if (!preview || !imageFile) {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
@@ -273,7 +273,16 @@ function ScannerPage() {
     setGenerating(true);
     setRecipe(null);
     try {
-      const result = await callGenerate({ data: { age: storedAge, hobby: joined, tools: tools.join(", ") } });
+      const { data: imageData, mime: imageMime } = await fileToBase64(imageFile);
+      const result = await callGenerate({
+        data: {
+          age: storedAge,
+          hobby: joined,
+          tools: tools.join(", "),
+          image: imageData,
+          imageMime,
+        },
+      });
       setRecipe(result.content);
       toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
     } catch (err) {
