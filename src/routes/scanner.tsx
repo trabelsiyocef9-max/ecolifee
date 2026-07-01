@@ -118,12 +118,15 @@ function ScannerPage() {
   const callGenerate = useServerFn(generateRecipe);
   const [hobbies, setHobbies] = useState<string[]>([]);
   const [hobbyInput, setHobbyInput] = useState("");
+  const [tools, setTools] = useState<string[]>([]);
+  const [toolInput, setToolInput] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [toolsSyncStatus, setToolsSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
   const hydratedRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -151,9 +154,13 @@ function ScannerPage() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (cancelled) return;
-      const saved = data.user?.user_metadata?.hobbies;
-      if (Array.isArray(saved)) {
-        setHobbies(saved.filter((h): h is string => typeof h === "string"));
+      const savedHobbies = data.user?.user_metadata?.hobbies;
+      if (Array.isArray(savedHobbies)) {
+        setHobbies(savedHobbies.filter((h): h is string => typeof h === "string"));
+      }
+      const savedTools = data.user?.user_metadata?.tools;
+      if (Array.isArray(savedTools)) {
+        setTools(savedTools.filter((t): t is string => typeof t === "string"));
       }
       hydratedRef.current = true;
     })();
@@ -205,6 +212,37 @@ function ScannerPage() {
     void syncHobbies(next);
   }
 
+  async function syncTools(next: string[]) {
+    setToolsSyncStatus("saving");
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { tools: next } });
+      if (error) throw error;
+      setToolsSyncStatus("saved");
+    } catch (err) {
+      console.error("Failed to sync tools", err);
+      setToolsSyncStatus("idle");
+    }
+  }
+
+  function addTool() {
+    const value = toolInput.trim();
+    if (!value) return;
+    if (tools.some((t) => t.toLowerCase() === value.toLowerCase())) {
+      setToolInput("");
+      return;
+    }
+    const next = [...tools, value];
+    setTools(next);
+    setToolInput("");
+    void syncTools(next);
+  }
+
+  function removeTool(t: string) {
+    const next = tools.filter((x) => x !== t);
+    setTools(next);
+    void syncTools(next);
+  }
+
   async function handleGenerate() {
     if (hobbies.length === 0) {
       toast.error("Add at least one hobby first.");
@@ -219,7 +257,7 @@ function ScannerPage() {
     setGenerating(true);
     setRecipe(null);
     try {
-      const result = await callGenerate({ data: { age: storedAge, hobby: joined } });
+      const result = await callGenerate({ data: { age: storedAge, hobby: joined, tools: tools.join(", ") } });
       setRecipe(result.content);
       toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
     } catch (err) {
@@ -297,6 +335,66 @@ function ScannerPage() {
                       type="button"
                       onClick={() => removeHobby(h)}
                       aria-label={`Remove ${h}`}
+                      className="rounded-full p-0.5 transition hover:bg-[#1B261E]/10"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-[#E5E3D8] pt-8">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="tool" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+                Your tools
+              </Label>
+              {toolsSyncStatus !== "idle" && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-light tracking-wide"
+                  style={{ color: "#dce1db" }}
+                  aria-live="polite"
+                >
+                  {toolsSyncStatus === "saving" ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Saving profile…
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Saved to profile
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
+            <Input
+              id="tool"
+              value={toolInput}
+              onChange={(e) => setToolInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addTool();
+                }
+              }}
+              placeholder="Type a tool (e.g. Scissors, Glue gun) and press Enter..."
+              className="h-12 rounded-full border border-[#E5E3D8] bg-transparent px-5 font-sans text-base shadow-none focus-visible:ring-0 focus-visible:border-[color:var(--sage)]"
+            />
+            {tools.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {tools.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--clay)]/15 px-3 py-1 text-sm text-[#1B261E]"
+                  >
+                    {t}
+                    <button
+                      type="button"
+                      onClick={() => removeTool(t)}
+                      aria-label={`Remove ${t}`}
                       className="rounded-full p-0.5 transition hover:bg-[#1B261E]/10"
                     >
                       <X className="h-3 w-3" />
