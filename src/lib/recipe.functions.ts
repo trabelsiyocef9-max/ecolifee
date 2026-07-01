@@ -22,6 +22,8 @@ const Input = z.object({
     .transform((s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean))
     .pipe(z.array(z.string().regex(HOBBY_TAG)).max(12))
     .transform((tags) => tags.join(", ")),
+  image: z.string().min(1).max(8_000_000).optional(),
+  imageMime: z.string().regex(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i).optional(),
 });
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -31,10 +33,19 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 const FALLBACK_MODEL = "deepseek/deepseek-chat-v3-0324:free";
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
-async function callGemini(apiKey: string, system: string, user: string): Promise<string> {
+async function callGemini(
+  apiKey: string,
+  system: string,
+  user: string,
+  image?: { data: string; mime: string },
+): Promise<string> {
   const url = `${GEMINI_ENDPOINT}?key=${apiKey}`;
+  const parts: Array<Record<string, unknown>> = [{ text: `${system}\n\n${user}` }];
+  if (image) {
+    parts.push({ inline_data: { mime_type: image.mime, data: image.data } });
+  }
   const body = {
-    contents: [{ parts: [{ text: `${system}\n\n${user}` }] }],
+    contents: [{ parts }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
   };
 
@@ -107,7 +118,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
-    const { age, hobby, tools } = data;
+    const { age, hobby, tools, image, imageMime } = data;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
@@ -128,14 +139,31 @@ ${tools ? `IMPORTANT: The user has explicitly told you they own these tools: ${t
 
 Write clean, step-by-step instructions for the craft project. Do not mention or restate the user's age in your response — just apply the safety filtering silently to your tool choices.`;
 
-    const userPrompt = `I have this item to upcycle, and my hobbies are: ${hobby}.${tools ? ` The tools I have available: ${tools}.` : ""} Give me a creative DIY upcycling project using this item.`;
+    const userPrompt = [
+      `USER PROFILE`,
+      `- Approximate age: ${age}`,
+      `- Hobbies: ${hobby}`,
+      `- Tools available: ${tools || "(none listed — assume basic household supplies)"}`,
+      ``,
+      image
+        ? `ITEM TO UPCYCLE: See the attached photo. First, briefly identify what the item is (one short line), then design a creative DIY upcycling project that reuses THAT specific item. Tie the project to the user's hobbies above, and only use tools they have (or safe household alternatives). Return clear, numbered step-by-step instructions.`
+        : `ITEM TO UPCYCLE: (no photo attached) Ask the user to upload a photo, or design a generic project tied to their hobbies above.`,
+    ].join("\n");
+
+    console.log("[generateRecipe] Prompt inputs — age:", age, "| hobbies:", hobby, "| tools:", tools || "(none)", "| image:", image ? `${imageMime} ${Math.round((image.length * 3) / 4 / 1024)}KB` : "none");
 
     try {
-      const content = await callGemini(geminiKey, system, userPrompt);
+      const content = await callGemini(
+        geminiKey,
+        system,
+        userPrompt,
+        image && imageMime ? { data: image, mime: imageMime } : undefined,
+      );
       return { content, model: GEMINI_MODEL, degraded: false };
     } catch (err) {
       console.log("[generateRecipe] Gemini failed, trying OpenRouter fallback:", (err as Error).message);
     }
+
 
     // Last-resort fallback only if Gemini itself errored out.
     const fallbackKeys = [

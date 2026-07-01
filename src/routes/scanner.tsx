@@ -121,6 +121,7 @@ function ScannerPage() {
   const [tools, setTools] = useState<string[]>([]);
   const [toolInput, setToolInput] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
@@ -190,7 +191,22 @@ function ScannerPage() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
+    setImageFile(file);
     setRecipe(null);
+  }
+
+  async function fileToBase64(file: File): Promise<{ data: string; mime: string }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const [meta, data] = result.split(",");
+        const mime = /data:(.*?);base64/.exec(meta)?.[1] || file.type || "image/jpeg";
+        resolve({ data, mime });
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
   function addHobby() {
@@ -248,7 +264,7 @@ function ScannerPage() {
       toast.error("Add at least one hobby first.");
       return;
     }
-    if (!preview) {
+    if (!preview || !imageFile) {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
@@ -257,7 +273,16 @@ function ScannerPage() {
     setGenerating(true);
     setRecipe(null);
     try {
-      const result = await callGenerate({ data: { age: storedAge, hobby: joined, tools: tools.join(", ") } });
+      const { data: imageData, mime: imageMime } = await fileToBase64(imageFile);
+      const result = await callGenerate({
+        data: {
+          age: storedAge,
+          hobby: joined,
+          tools: tools.join(", "),
+          image: imageData,
+          imageMime,
+        },
+      });
       setRecipe(result.content);
       toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
     } catch (err) {
