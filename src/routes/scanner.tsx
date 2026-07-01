@@ -344,6 +344,66 @@ function ScannerPage() {
               </div>
             )}
           </div>
+
+          <div className="flex flex-col gap-3 border-t border-[#E5E3D8] pt-8">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="tool" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+                Your tools
+              </Label>
+              {toolsSyncStatus !== "idle" && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-light tracking-wide"
+                  style={{ color: "#dce1db" }}
+                  aria-live="polite"
+                >
+                  {toolsSyncStatus === "saving" ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Saving profile…
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Saved to profile
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
+            <Input
+              id="tool"
+              value={toolInput}
+              onChange={(e) => setToolInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addTool();
+                }
+              }}
+              placeholder="Type a tool (e.g. Scissors, Glue gun) and press Enter..."
+              className="h-12 rounded-full border border-[#E5E3D8] bg-transparent px-5 font-sans text-base shadow-none focus-visible:ring-0 focus-visible:border-[color:var(--sage)]"
+            />
+            {tools.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {tools.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--clay)]/15 px-3 py-1 text-sm text-[#1B261E]"
+                  >
+                    {t}
+                    <button
+                      type="button"
+                      onClick={() => removeTool(t)}
+                      aria-label={`Remove ${t}`}
+                      className="rounded-full p-0.5 transition hover:bg-[#1B261E]/10"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
