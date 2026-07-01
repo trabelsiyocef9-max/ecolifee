@@ -33,10 +33,19 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 const FALLBACK_MODEL = "deepseek/deepseek-chat-v3-0324:free";
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
-async function callGemini(apiKey: string, system: string, user: string): Promise<string> {
+async function callGemini(
+  apiKey: string,
+  system: string,
+  user: string,
+  image?: { data: string; mime: string },
+): Promise<string> {
   const url = `${GEMINI_ENDPOINT}?key=${apiKey}`;
+  const parts: Array<Record<string, unknown>> = [{ text: `${system}\n\n${user}` }];
+  if (image) {
+    parts.push({ inline_data: { mime_type: image.mime, data: image.data } });
+  }
   const body = {
-    contents: [{ parts: [{ text: `${system}\n\n${user}` }] }],
+    contents: [{ parts }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
   };
 
