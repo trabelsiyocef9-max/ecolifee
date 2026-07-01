@@ -257,7 +257,7 @@ function ScannerPage() {
     setGenerating(true);
     setRecipe(null);
     try {
-      const result = await callGenerate({ data: { age: storedAge, hobby: joined } });
+      const result = await callGenerate({ data: { age: storedAge, hobby: joined, tools: tools.join(", ") } });
       setRecipe(result.content);
       toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
     } catch (err) {
