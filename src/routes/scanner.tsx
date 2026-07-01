@@ -212,6 +212,37 @@ function ScannerPage() {
     void syncHobbies(next);
   }
 
+  async function syncTools(next: string[]) {
+    setToolsSyncStatus("saving");
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { tools: next } });
+      if (error) throw error;
+      setToolsSyncStatus("saved");
+    } catch (err) {
+      console.error("Failed to sync tools", err);
+      setToolsSyncStatus("idle");
+    }
+  }
+
+  function addTool() {
+    const value = toolInput.trim();
+    if (!value) return;
+    if (tools.some((t) => t.toLowerCase() === value.toLowerCase())) {
+      setToolInput("");
+      return;
+    }
+    const next = [...tools, value];
+    setTools(next);
+    setToolInput("");
+    void syncTools(next);
+  }
+
+  function removeTool(t: string) {
+    const next = tools.filter((x) => x !== t);
+    setTools(next);
+    void syncTools(next);
+  }
+
   async function handleGenerate() {
     if (hobbies.length === 0) {
       toast.error("Add at least one hobby first.");
