@@ -107,19 +107,13 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
-    const { age, hobby } = data;
+    const { age, hobby, tools } = data;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
       throw new Error("No Gemini API key configured. Add GEMINI_API_KEY in project secrets.");
     }
 
-    // System prompt openly uses the estimated age as a safety filter for tool
-    // recommendations. It does NOT instruct the model to hide the age from its
-    // own reasoning — that would undermine the safety gate, not protect privacy.
-    // Privacy/UX goal (not surfacing an unreliable estimate on-screen) is handled
-    // by simply never including `age` in the response payload below, not by
-    // hiding it from the model.
     const system = `You are a creative upcycling and crafting assistant for an app that helps young people turn household trash into DIY craft projects.
 
 The user is approximately ${age} years old (this is an estimate, used only to choose age-appropriate tools and techniques).
@@ -130,9 +124,11 @@ Apply these safety rules based on the age:
 - For early teens (13-15), basic supervised tools like a craft knife or low-temp glue gun may be mentioned, but always include a safety note to use them with adult supervision.
 - For older teens and adults (16+), normal craft and household tools can be recommended with standard safety notes.
 
+${tools ? `IMPORTANT: The user has explicitly told you they own these tools: ${tools}. Prefer these tools in your steps whenever possible, and do not require tools the user has not mentioned unless strictly necessary (in that case, suggest a safe household alternative).` : "The user has not listed any specific tools they own — assume only basic household supplies."}
+
 Write clean, step-by-step instructions for the craft project. Do not mention or restate the user's age in your response — just apply the safety filtering silently to your tool choices.`;
 
-    const userPrompt = `I have this item to upcycle, and my hobbies are: ${hobby}. Give me a creative DIY upcycling project using this item.`;
+    const userPrompt = `I have this item to upcycle, and my hobbies are: ${hobby}.${tools ? ` The tools I have available: ${tools}.` : ""} Give me a creative DIY upcycling project using this item.`;
 
     try {
       const content = await callGemini(geminiKey, system, userPrompt);
