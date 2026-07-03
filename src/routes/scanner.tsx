@@ -122,6 +122,7 @@ function ScannerPage() {
   const [toolInput, setToolInput] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [additionalInfo, setAdditionalInfo] = useState("");
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
@@ -281,6 +282,7 @@ function ScannerPage() {
           tools: tools.join(", "),
           image: imageData,
           imageMime,
+          additionalInfo: additionalInfo.trim() || undefined,
         },
       });
       setRecipe(result.content);
@@ -480,6 +482,22 @@ function ScannerPage() {
               )}
             </Button>
           </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)]">
+          <Label htmlFor="additionalInfo" className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+            Additional Details
+          </Label>
+          <p className="mt-1 text-sm font-light text-foreground/60">
+            Help the AI understand your item better
+          </p>
+          <Input
+            id="additionalInfo"
+            value={additionalInfo}
+            onChange={(e) => setAdditionalInfo(e.target.value.slice(0, 300))}
+            placeholder={`Optional: describe the item further (e.g. "it's made of glass", "it's 30cm tall", "it has a broken handle")`}
+            className="mt-3 h-12 rounded-full border border-[#E5E3D8] bg-transparent px-5 font-sans text-base shadow-none focus-visible:ring-0 focus-visible:border-[color:var(--sage)]"
+          />
         </div>
 
         {generating && (

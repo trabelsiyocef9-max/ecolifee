@@ -24,6 +24,7 @@ const Input = z.object({
     .transform((tags) => tags.join(", ")),
   image: z.string().min(1).max(8_000_000).optional(),
   imageMime: z.string().regex(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i).optional(),
+  additionalInfo: z.string().max(300).optional(),
 });
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -118,7 +119,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
-    const { age, hobby, tools, image, imageMime } = data;
+    const { age, hobby, tools, image, imageMime, additionalInfo } = data;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
@@ -162,11 +163,13 @@ Step 2: [Name of Step 2]
 
 ${image
   ? `ITEM TO UPCYCLE: See the attached photo. First, identify what the item is in one short sentence. Then, design a realistic, physically stable DIY upcycling project that reuses THAT specific item.
+  ${additionalInfo ? `ADDITIONAL DETAILS PROVIDED BY USER: ${additionalInfo}. Use this information to improve accuracy — especially for material identification and safety decisions.` : ""}
 
   Before writing, you must mentally simulate the physical construction. Ensure there are no skipped steps, impossible physical joins, or missing instructions.
 
   Generate the complete recipe now using only the exact output layout defined in the system prompt. Do not ask any questions or leave options.`
   : `ITEM TO UPCYCLE: (no photo attached) Design a realistic, generic project tied to the user's hobbies above.
+  ${additionalInfo ? `ADDITIONAL DETAILS PROVIDED BY USER: ${additionalInfo}. Use this information to improve accuracy — especially for material identification and safety decisions.` : ""}
 
   Before writing, you must mentally simulate the physical construction. Ensure there are no skipped steps, impossible physical joins, or missing instructions.
 
