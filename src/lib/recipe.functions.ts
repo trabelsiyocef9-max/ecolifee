@@ -46,7 +46,7 @@ async function callGemini(
   }
   const body = {
     contents: [{ parts }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+    generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
   };
 
   console.log("[generateRecipe] POST Gemini, model:", GEMINI_MODEL);
