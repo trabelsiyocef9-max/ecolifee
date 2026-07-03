@@ -163,11 +163,13 @@ Step 2: [Name of Step 2]
 
 ${image
   ? `ITEM TO UPCYCLE: See the attached photo. First, identify what the item is in one short sentence. Then, design a realistic, physically stable DIY upcycling project that reuses THAT specific item.
+  ${additionalInfo ? `ADDITIONAL DETAILS PROVIDED BY USER: ${additionalInfo}. Use this information to improve accuracy — especially for material identification and safety decisions.` : ""}
 
   Before writing, you must mentally simulate the physical construction. Ensure there are no skipped steps, impossible physical joins, or missing instructions.
 
   Generate the complete recipe now using only the exact output layout defined in the system prompt. Do not ask any questions or leave options.`
   : `ITEM TO UPCYCLE: (no photo attached) Design a realistic, generic project tied to the user's hobbies above.
+  ${additionalInfo ? `ADDITIONAL DETAILS PROVIDED BY USER: ${additionalInfo}. Use this information to improve accuracy — especially for material identification and safety decisions.` : ""}
 
   Before writing, you must mentally simulate the physical construction. Ensure there are no skipped steps, impossible physical joins, or missing instructions.
 
