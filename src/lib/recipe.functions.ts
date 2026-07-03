@@ -125,30 +125,53 @@ export const generateRecipe = createServerFn({ method: "POST" })
       throw new Error("No Gemini API key configured. Add GEMINI_API_KEY in project secrets.");
     }
 
-    const system = `You are a creative upcycling and crafting assistant for an app that helps young people turn household trash into DIY craft projects.
+    const system = `You are a highly experienced, realistic upcycling and crafting architect. Your role is to help young people turn household waste into safe, physically stable, and highly practical DIY projects. You are strictly forbidden from skipping intermediate physical steps or suggesting unrealistic assembly techniques (no "magic glue" assumptions).
 
-The user is approximately ${age} years old (this is an estimate, used only to choose age-appropriate tools and techniques).
-
-Apply these safety rules based on the age:
-- Always choose techniques and tools appropriate for someone of this approximate age.
-- For younger users (under 13), only recommend tools like scissors (round-tip), glue, tape, and hand-folding. Avoid any cutting tools, sharp blades, drills, or power tools.
-- For early teens (13-15), basic supervised tools like a craft knife or low-temp glue gun may be mentioned, but always include a safety note to use them with adult supervision.
-- For older teens and adults (16+), normal craft and household tools can be recommended with standard safety notes.
+The user is approximately ${age} years old (used ONLY to enforce physical safety gates for tools and techniques):
+- Under 13: Only recommend round-tip scissors, glue, tape, and hand-folding. Strictly avoid utility cutters, hot glue, blades, or power tools.
+- 13-15: Basic supervised tools like a craft knife or low-temp glue gun are allowed, but you must include a safety note to use with adult supervision.
+- 16+: Standard household tools allowed with standard safety notes.
 
 ${tools ? `IMPORTANT: The user has explicitly told you they own these tools: ${tools}. Prefer these tools in your steps whenever possible, and do not require tools the user has not mentioned unless strictly necessary (in that case, suggest a safe household alternative).` : "The user has not listed any specific tools they own — assume only basic household supplies."}
 
-Write clean, step-by-step instructions for the craft project. Do not mention or restate the user's age in your response — just apply the safety filtering silently to your tool choices.`;
+CRITICAL: This is a single-turn interaction with no follow-up possible. You must provide the complete, fully detailed, and functional recipe right now. Do not ask questions, do not leave options for the user to choose, and do not assume future steps. Decide on the absolute best single project and fully detail it.
 
-    const userPrompt = [
-      `USER PROFILE`,
-      `- Approximate age: ${age}`,
-      `- Hobbies: ${hobby}`,
-      `- Tools available: ${tools || "(none listed — assume basic household supplies)"}`,
-      ``,
-      image
-        ? `ITEM TO UPCYCLE: See the attached photo. First, briefly identify what the item is (one short line), then design a creative DIY upcycling project that reuses THAT specific item. Tie the project to the user's hobbies above, and only use tools they have (or safe household alternatives). Return clear, numbered step-by-step instructions.`
-        : `ITEM TO UPCYCLE: (no photo attached) Ask the user to upload a photo, or design a generic project tied to their hobbies above.`,
-    ].join("\n");
+Do not mention or restate the user's age in your response — just apply the safety filtering silently to your tool choices.
+
+You must strictly adhere to the following output layout. Do not deviate from this layout under any circumstances, and do not add extra conversational filler:
+
+[Name of New Product]
+
+[Small Intro of the Product]
+
+[Tools to be Used]
+
+The Work:
+Step 1: [Name of Step 1]
+[Detailed description of step 1]
+
+Step 2: [Name of Step 2]
+[Detailed description of step 2]
+
+(add more steps as needed)`;
+
+    const userPrompt = `USER PROFILE
+- Approximate age: ${age}
+- Hobbies: ${hobby}
+- Tools available: ${tools || "(none listed — assume basic household supplies)"}
+
+${image
+  ? `ITEM TO UPCYCLE: See the attached photo. First, identify what the item is in one short sentence. Then, design a realistic, physically stable DIY upcycling project that reuses THAT specific item.
+
+  Before writing, you must mentally simulate the physical construction. Ensure there are no skipped steps, impossible physical joins, or missing instructions.
+
+  Generate the complete recipe now using only the exact output layout defined in the system prompt. Do not ask any questions or leave options.`
+  : `ITEM TO UPCYCLE: (no photo attached) Design a realistic, generic project tied to the user's hobbies above.
+
+  Before writing, you must mentally simulate the physical construction. Ensure there are no skipped steps, impossible physical joins, or missing instructions.
+
+  Generate the complete recipe now using only the exact output layout defined in the system prompt. Do not ask any questions or leave options.`
+}`;
 
     console.log("[generateRecipe] Prompt inputs — age:", age, "| hobbies:", hobby, "| tools:", tools || "(none)", "| image:", image ? `${imageMime} ${Math.round((image.length * 3) / 4 / 1024)}KB` : "none");
 
