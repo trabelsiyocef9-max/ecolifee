@@ -119,7 +119,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
-    const { age, hobby, tools, image, imageMime } = data;
+    const { age, hobby, tools, image, imageMime, additionalInfo } = data;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
