@@ -282,6 +282,7 @@ function ScannerPage() {
           tools: tools.join(", "),
           image: imageData,
           imageMime,
+          additionalInfo: additionalInfo.trim() || undefined,
         },
       });
       setRecipe(result.content);
