@@ -122,6 +122,7 @@ function ScannerPage() {
   const [toolInput, setToolInput] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [additionalInfo, setAdditionalInfo] = useState("");
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [age, setAge] = useState<number>(14);
