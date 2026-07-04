@@ -134,6 +134,7 @@ CRITICAL MATERIAL SAFETY RULE: Before designing any project, you must identify t
 - Cardboard/paper: Free to cut, fold, score.
 - Metal: No cutting unless with proper tools for 16+. Drilling only for 16+.
 - Always state the identified material in the item identification line.
+- If you cannot determine the material with 100% certainty from the image alone, always default to the most restrictive safety assumption. Design the project as if the item is made of the most fragile/dangerous material it could possibly be (e.g. if it could be glass or plastic, treat it as glass — no cutting, no drilling, intact use only). Never assume a safer material when uncertain.
 
 The user is approximately ${age} years old (used ONLY to enforce physical safety gates for tools and techniques):
 - Under 13: Only recommend round-tip scissors, glue, tape, and hand-folding. Strictly avoid utility cutters, hot glue, blades, or power tools.
