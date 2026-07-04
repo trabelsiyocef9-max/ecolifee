@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { generateRecipe } from "@/lib/recipe.functions";
+import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/scanner")({
@@ -511,20 +512,23 @@ function ScannerPage() {
           <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/70 p-10 shadow-[var(--shadow-elegant)] backdrop-blur-md">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">Your recipe</p>
             <h3 className="mt-2 font-serif text-3xl text-foreground">Step by step</h3>
-            <div className="mt-8 space-y-4 font-sans text-base font-light leading-relaxed text-foreground/85">
-              {recipe.split(/\n+/).map((line, i) => {
-                const trimmed = line.trim();
-                if (!trimmed) return null;
-                if (/^#{1,6}\s/.test(trimmed) || /^\*\*.+\*\*$/.test(trimmed)) {
-                  return (
-                    <h4 key={i} className="font-serif text-xl text-foreground">
-                      {trimmed.replace(/^#{1,6}\s*/, "").replace(/^\*\*|\*\*$/g, "")}
-                    </h4>
-                  );
-                }
-                return <p key={i}>{trimmed}</p>;
-              })}
+            <div className="mt-8 font-sans text-base font-light leading-relaxed text-foreground/85">
+              <ReactMarkdown
+                components={{
+                  h1: (props) => <h1 className="mt-4 font-serif text-2xl font-bold text-foreground" {...props} />,
+                  h2: (props) => <h2 className="mt-4 font-serif text-xl font-semibold text-foreground" {...props} />,
+                  h3: (props) => <h3 className="mt-4 font-serif text-lg font-semibold text-foreground" {...props} />,
+                  p: (props) => <p className="my-2" {...props} />,
+                  ul: (props) => <ul className="my-2 ml-4 list-disc" {...props} />,
+                  ol: (props) => <ol className="my-2 ml-4 list-decimal" {...props} />,
+                  li: (props) => <li className="my-1" {...props} />,
+                  strong: (props) => <strong className="font-bold" {...props} />,
+                }}
+              >
+                {recipe}
+              </ReactMarkdown>
             </div>
+
           </div>
         )}
       </section>
