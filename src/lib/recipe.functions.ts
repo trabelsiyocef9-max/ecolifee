@@ -162,7 +162,17 @@ Step 1: [Name of Step 1]
 Step 2: [Name of Step 2]
 [Detailed description of step 2]
 
-(add more steps as needed)`;
+(add more steps as needed)
+CRITICAL FORMATTING RULE: You must use markdown syntax throughout your entire 
+response. Specifically:
+- The product name must be formatted as: ## [Product Name]
+- "Tools to be Used" must be formatted as: ### Tools to be Used
+- Each tool must be a markdown bullet point: - tool name
+- "The Work" must be formatted as: ### The Work
+- Every step title must be formatted as: #### Step N: [Step Name]
+- Step descriptions are plain paragraph text beneath each step header.
+- Never write step titles inline with their description on the same line.
+- Never merge multiple steps into one paragraph.`;
 
     const userPrompt = `USER PROFILE
 - Approximate age: ${age}
