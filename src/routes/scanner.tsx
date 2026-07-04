@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { generateRecipe } from "@/lib/recipe.functions";
+import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/scanner")({
