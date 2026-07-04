@@ -511,20 +511,23 @@ function ScannerPage() {
           <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/70 p-10 shadow-[var(--shadow-elegant)] backdrop-blur-md">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">Your recipe</p>
             <h3 className="mt-2 font-serif text-3xl text-foreground">Step by step</h3>
-            <div className="mt-8 space-y-4 font-sans text-base font-light leading-relaxed text-foreground/85">
-              {recipe.split(/\n+/).map((line, i) => {
-                const trimmed = line.trim();
-                if (!trimmed) return null;
-                if (/^#{1,6}\s/.test(trimmed) || /^\*\*.+\*\*$/.test(trimmed)) {
-                  return (
-                    <h4 key={i} className="font-serif text-xl text-foreground">
-                      {trimmed.replace(/^#{1,6}\s*/, "").replace(/^\*\*|\*\*$/g, "")}
-                    </h4>
-                  );
-                }
-                return <p key={i}>{trimmed}</p>;
-              })}
+            <div className="mt-8 font-sans text-base font-light leading-relaxed text-foreground/85">
+              <ReactMarkdown
+                components={{
+                  h1: ({ node, ...props }) => <h1 className="mt-4 font-serif text-2xl font-bold text-foreground" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="mt-4 font-serif text-xl font-semibold text-foreground" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="mt-4 font-serif text-lg font-semibold text-foreground" {...props} />,
+                  p: ({ node, ...props }) => <p className="my-2" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="my-2 ml-4 list-disc" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="my-2 ml-4 list-decimal" {...props} />,
+                  li: ({ node, ...props }) => <li className="my-1" {...props} />,
+                  strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                }}
+              >
+                {recipe}
+              </ReactMarkdown>
             </div>
+
           </div>
         )}
       </section>
