@@ -515,14 +515,14 @@ function ScannerPage() {
             <div className="mt-8 font-sans text-base font-light leading-relaxed text-foreground/85">
               <ReactMarkdown
                 components={{
-                  h1: ({ node, ...props }) => <h1 className="mt-4 font-serif text-2xl font-bold text-foreground" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="mt-4 font-serif text-xl font-semibold text-foreground" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="mt-4 font-serif text-lg font-semibold text-foreground" {...props} />,
-                  p: ({ node, ...props }) => <p className="my-2" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="my-2 ml-4 list-disc" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="my-2 ml-4 list-decimal" {...props} />,
-                  li: ({ node, ...props }) => <li className="my-1" {...props} />,
-                  strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                  h1: (props) => <h1 className="mt-4 font-serif text-2xl font-bold text-foreground" {...props} />,
+                  h2: (props) => <h2 className="mt-4 font-serif text-xl font-semibold text-foreground" {...props} />,
+                  h3: (props) => <h3 className="mt-4 font-serif text-lg font-semibold text-foreground" {...props} />,
+                  p: (props) => <p className="my-2" {...props} />,
+                  ul: (props) => <ul className="my-2 ml-4 list-disc" {...props} />,
+                  ol: (props) => <ol className="my-2 ml-4 list-decimal" {...props} />,
+                  li: (props) => <li className="my-1" {...props} />,
+                  strong: (props) => <strong className="font-bold" {...props} />,
                 }}
               >
                 {recipe}
