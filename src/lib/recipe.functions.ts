@@ -126,15 +126,55 @@ export const generateRecipe = createServerFn({ method: "POST" })
       throw new Error("No Gemini API key configured. Add GEMINI_API_KEY in project secrets.");
     }
 
+    let itemIdentification = "Unknown";
+    let itemMaterial = "Unknown";
+    let materialCertain = "NO";
+
+    if (image && imageMime) {
+      const identificationPrompt = `Look at this image carefully.
+
+Identify:
+1. What the item is (one sentence)
+2. What material it is made of (be specific: glass, plastic, metal, cardboard, ceramic, fabric, wood, etc.)
+3. If you are not 100% certain of the material, list ALL materials it could possibly be.
+
+Respond in this exact format:
+ITEM: [what the item is]
+MATERIAL: [material or list of possible materials]
+CERTAIN: [YES or NO - are you certain of the material?]`;
+
+      try {
+        const idResponse = await callGemini(
+          geminiKey,
+          "You are a careful visual material identification assistant.",
+          identificationPrompt,
+          { data: image, mime: imageMime },
+        );
+        const itemMatch = idResponse.match(/ITEM:\s*(.+)/i);
+        const materialMatch = idResponse.match(/MATERIAL:\s*(.+)/i);
+        const certainMatch = idResponse.match(/CERTAIN:\s*(YES|NO)/i);
+        if (itemMatch) itemIdentification = itemMatch[1].trim();
+        if (materialMatch) itemMaterial = materialMatch[1].trim();
+        if (certainMatch) materialCertain = certainMatch[1].trim().toUpperCase();
+      } catch (err) {
+        console.log("[generateRecipe] Identification step failed:", (err as Error).message);
+      }
+    }
+
+    console.log("[generateRecipe] Item identified:", itemIdentification, "| Material:", itemMaterial, "| Certain:", materialCertain);
+
     const system = `You are a highly experienced, realistic upcycling and crafting architect. Your role is to help young people turn household waste into safe, physically stable, and highly practical DIY projects. You are strictly forbidden from skipping intermediate physical steps or suggesting unrealistic assembly techniques (no "magic glue" assumptions).
 
-CRITICAL MATERIAL SAFETY RULE: Before designing any project, you must identify the material the item is made of (glass, plastic, metal, cardboard, fabric, etc.). Apply these strict rules:
-- Glass: NEVER suggest cutting, drilling, or scoring glass. Only recommend projects that use the glass item intact (painting, decorating, filling, wrapping). Explicitly state "This item is glass — no cutting or drilling."
-- Plastic: Cutting is allowed for teens 13+ with appropriate safety notes.
-- Cardboard/paper: Free to cut, fold, score.
-- Metal: No cutting unless with proper tools for 16+. Drilling only for 16+.
-- Always state the identified material in the item identification line.
-- If you cannot determine the material with 100% certainty from the image alone, always default to the most restrictive safety assumption. Design the project as if the item is made of the most fragile/dangerous material it could possibly be (e.g. if it could be glass or plastic, treat it as glass — no cutting, no drilling, intact use only). Never assume a safer material when uncertain.
+IDENTIFIED ITEM: ${itemIdentification}
+IDENTIFIED MATERIAL: ${itemMaterial}
+MATERIAL CERTAINTY: ${materialCertain}
+
+MATERIAL SAFETY RULE:
+- If MATERIAL CERTAINTY is NO, or if the material list includes glass, ceramic, or any fragile material: treat the item as glass. NEVER suggest cutting, drilling, or applying heat directly to the item. Only use it intact.
+- If material is confirmed plastic: cutting is allowed for 13+ with safety notes.
+- If material is confirmed cardboard/paper: cutting and folding is free.
+- If material is confirmed metal: no cutting unless user is 16+ with proper tools.
+- Always state the identified material and certainty level in the item identification line of your response.
 
 The user is approximately ${age} years old (used ONLY to enforce physical safety gates for tools and techniques):
 - Under 13: Only recommend round-tip scissors, glue, tape, and hand-folding. Strictly avoid utility cutters, hot glue, blades, or power tools.
