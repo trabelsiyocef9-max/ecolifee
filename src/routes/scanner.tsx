@@ -197,6 +197,52 @@ function ScannerPage() {
     setRecipe(null);
   }
 
+  async function openCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      cameraRef.current?.click();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      setCameraStream(stream);
+      setCameraOpen(true);
+    } catch (err) {
+      console.error("Camera access failed", err);
+      toast.error("Couldn't open camera. Falling back to file picker.");
+      cameraRef.current?.click();
+    }
+  }
+
+  function closeCamera() {
+    cameraStream?.getTracks().forEach((t) => t.stop());
+    setCameraStream(null);
+    setCameraOpen(false);
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      setImageFile(file);
+      setRecipe(null);
+      closeCamera();
+    }, "image/jpeg", 0.92);
+  }
+
+
   async function fileToBase64(file: File): Promise<{ data: string; mime: string }> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
