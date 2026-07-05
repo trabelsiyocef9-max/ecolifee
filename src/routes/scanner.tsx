@@ -583,7 +583,7 @@ function ScannerPage() {
           <div className="mt-12 rounded-2xl border border-[#E5E3D8] bg-card/70 p-10 shadow-[var(--shadow-elegant)] backdrop-blur-md">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--sage)]">Your recipe</p>
             <h3 className="mt-2 font-serif text-3xl text-foreground">Step by step</h3>
-            <div className="mt-8 font-sans text-base font-light leading-relaxed text-foreground/85 [&_br]:block [&_h1]:mb-2 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_li]:my-1 [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:my-2 [&_strong]:font-bold [&_ul]:ml-5 [&_ul]:list-disc">
+            <div className="mt-8 font-sans text-base font-light leading-relaxed text-foreground/85 [&_br]:block [&_h1]:mb-2 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_h4]:mt-4 [&_h4]:text-base [&_h4]:font-bold [&_li]:my-1 [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:my-2 [&_strong]:font-bold [&_ul]:ml-5 [&_ul]:list-disc">
               <ReactMarkdown>{recipe}</ReactMarkdown>
             </div>
 
