@@ -504,11 +504,27 @@ function ScannerPage() {
               <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="rounded-full">
                 <Upload className="mr-2 h-4 w-4" /> Upload photo
               </Button>
-              <Button type="button" variant="outline" onClick={() => cameraRef.current?.click()} className="rounded-full">
+              <Button type="button" variant="outline" onClick={openCamera} className="rounded-full">
                 <Camera className="mr-2 h-4 w-4" /> Use camera
               </Button>
             </div>
           </div>
+
+          {cameraOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+              <div className="w-full max-w-2xl rounded-2xl bg-card p-4 shadow-[var(--shadow-elegant)]">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl bg-black" />
+                <div className="mt-4 flex justify-center gap-3">
+                  <Button type="button" variant="outline" onClick={closeCamera} className="rounded-full">
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                  </Button>
+                  <Button type="button" onClick={capturePhoto} className="rounded-full">
+                    <Camera className="mr-2 h-4 w-4" /> Capture
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)]">
             <div>
