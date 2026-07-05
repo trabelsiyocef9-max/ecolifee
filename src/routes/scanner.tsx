@@ -133,6 +133,15 @@ function ScannerPage() {
   const hydratedRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (cameraOpen && videoRef.current && cameraStream) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraOpen, cameraStream]);
 
   useEffect(() => {
     if (loading) return;
@@ -196,6 +205,52 @@ function ScannerPage() {
     setImageFile(file);
     setRecipe(null);
   }
+
+  async function openCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      cameraRef.current?.click();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      setCameraStream(stream);
+      setCameraOpen(true);
+    } catch (err) {
+      console.error("Camera access failed", err);
+      toast.error("Couldn't open camera. Falling back to file picker.");
+      cameraRef.current?.click();
+    }
+  }
+
+  function closeCamera() {
+    cameraStream?.getTracks().forEach((t) => t.stop());
+    setCameraStream(null);
+    setCameraOpen(false);
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      setImageFile(file);
+      setRecipe(null);
+      closeCamera();
+    }, "image/jpeg", 0.92);
+  }
+
 
   async function fileToBase64(file: File): Promise<{ data: string; mime: string }> {
     return new Promise((resolve, reject) => {
@@ -449,11 +504,27 @@ function ScannerPage() {
               <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="rounded-full">
                 <Upload className="mr-2 h-4 w-4" /> Upload photo
               </Button>
-              <Button type="button" variant="outline" onClick={() => cameraRef.current?.click()} className="rounded-full">
+              <Button type="button" variant="outline" onClick={openCamera} className="rounded-full">
                 <Camera className="mr-2 h-4 w-4" /> Use camera
               </Button>
             </div>
           </div>
+
+          {cameraOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+              <div className="w-full max-w-2xl rounded-2xl bg-card p-4 shadow-[var(--shadow-elegant)]">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl bg-black" />
+                <div className="mt-4 flex justify-center gap-3">
+                  <Button type="button" variant="outline" onClick={closeCamera} className="rounded-full">
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                  </Button>
+                  <Button type="button" onClick={capturePhoto} className="rounded-full">
+                    <Camera className="mr-2 h-4 w-4" /> Capture
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elegant)]">
             <div>
