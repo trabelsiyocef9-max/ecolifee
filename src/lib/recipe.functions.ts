@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { getAgeInYears, getSafetyTier } from "@/lib/safety-tier";
 
 // Each tag must be short and contain only letters/spaces/hyphens.
 // Multiple tags arrive as a comma-separated string from the UI.
 const HOBBY_TAG = /^[A-Za-z][A-Za-z \-]{0,29}$/;
 
 const Input = z.object({
-  age: z.number().int().min(4).max(120),
   hobby: z
     .string()
     .min(1)
@@ -118,8 +118,22 @@ async function callOpenRouterFallback(key: string, system: string, user: string)
 export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
-  .handler(async ({ data }) => {
-    const { age, hobby, tools, image, imageMime, additionalInfo } = data;
+  .handler(async ({ data, context }) => {
+    const { hobby, tools, image, imageMime, additionalInfo } = data;
+
+    // Server-side age derivation from stored date of birth — client never sends age.
+    const { data: profileRow, error: profileErr } = await context.supabase
+      .from("profiles")
+      .select("date_of_birth")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (profileErr || !profileRow?.date_of_birth) {
+      throw new Error("Complete your profile (date of birth) to generate recipes.");
+    }
+    const dob = new Date(profileRow.date_of_birth);
+    const age = getAgeInYears(dob);
+    const tier = getSafetyTier(dob);
+    console.log("[generateRecipe] Derived age:", age, "| tier:", tier);
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
