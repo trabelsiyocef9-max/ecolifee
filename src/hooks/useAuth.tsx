@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type Profile = { name: string; age: number | null };
+type Profile = { name: string; date_of_birth: string | null };
 
 type AuthContextValue = {
   user: User | null;
@@ -10,7 +10,7 @@ type AuthContextValue = {
   profile: Profile | null;
   isAuthenticated: boolean;
   loading: boolean;
-  signUp: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (name: string, email: string, password: string, dateOfBirth: string) => Promise<{ ok: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -27,10 +27,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(userId: string) {
     const { data } = await supabase
       .from("profiles")
-      .select("name, age")
+      .select("name, date_of_birth")
       .eq("id", userId)
       .maybeSingle();
-    setProfile(data ? { name: data.name ?? "", age: data.age ?? null } : { name: "", age: null });
+    setProfile(
+      data
+        ? { name: data.name ?? "", date_of_birth: data.date_of_birth ?? null }
+        : { name: "", date_of_birth: null },
+    );
   }
 
   useEffect(() => {
@@ -38,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) {
-        // defer to avoid deadlock with onAuthStateChange
         setTimeout(() => { loadProfile(sess.user.id); }, 0);
       } else {
         setProfile(null);
@@ -61,12 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     isAuthenticated: !!user,
     loading,
-    async signUp(name, email, password) {
+    async signUp(name, email, password, dateOfBirth) {
       const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/scanner` : undefined;
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name }, emailRedirectTo: redirectTo },
+        options: { data: { name, date_of_birth: dateOfBirth }, emailRedirectTo: redirectTo },
       });
       if (error) return { ok: false, error: error.message };
       return { ok: true };
