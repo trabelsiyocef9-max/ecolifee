@@ -126,7 +126,6 @@ function ScannerPage() {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [recipe, setRecipe] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [age, setAge] = useState<number>(14);
   const [ageReady, setAgeReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [toolsSyncStatus, setToolsSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -150,13 +149,14 @@ function ScannerPage() {
       return;
     }
     if (profile === null) return;
-    if (profile.age == null) {
-      navigate({ to: "/age-check" });
+    // Profile must have a date of birth (set at signup). If missing, send to auth.
+    if (!profile.date_of_birth) {
+      navigate({ to: "/auth" });
       return;
     }
-    setAge(profile.age);
     setAgeReady(true);
   }, [isAuthenticated, loading, profile, navigate]);
+
 
   // Hydrate hobbies from user_metadata on load
   useEffect(() => {
@@ -325,7 +325,6 @@ function ScannerPage() {
       toast.error("Upload or capture a photo of your waste item first.");
       return;
     }
-    const storedAge = Number(localStorage.getItem("userAge")) || age;
     const joined = hobbies.join(", ");
     setGenerating(true);
     setRecipe(null);
@@ -333,7 +332,6 @@ function ScannerPage() {
       const { data: imageData, mime: imageMime } = await fileToBase64(imageFile);
       const result = await callGenerate({
         data: {
-          age: storedAge,
           hobby: joined,
           tools: tools.join(", "),
           image: imageData,
