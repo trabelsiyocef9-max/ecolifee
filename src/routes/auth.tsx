@@ -6,6 +6,7 @@ import { NavBar } from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { getAgeInYears } from "@/lib/safety-tier";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -22,6 +23,7 @@ type Mode = "signin" | "signup";
 function AuthPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [dob, setDob] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +32,14 @@ function AuthPage() {
     if (isAuthenticated) navigate({ to: "/scanner" });
   }, [isAuthenticated, navigate]);
 
+  const declaredAge = (() => {
+    if (mode !== "signup" || !dob) return null;
+    const d = new Date(dob);
+    if (Number.isNaN(d.getTime())) return null;
+    return getAgeInYears(d);
+  })();
+  const showUnder13Notice = declaredAge !== null && declaredAge < 13 && declaredAge >= 4;
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -37,18 +47,37 @@ function AuthPage() {
     const name = ((data.get("name") as string) ?? "").trim();
     const email = ((data.get("email") as string) ?? "").trim();
     const password = ((data.get("password") as string) ?? "");
+    const dobValue = ((data.get("date_of_birth") as string) ?? "").trim();
     const next: Record<string, string> = {};
 
     if (mode === "signup" && !name) next.name = "Name cannot be empty.";
     if (!/^\S+@\S+\.\S+$/.test(email)) next.email = "Please enter a valid email.";
     if (password.length < 6) next.password = "Password must be at least 6 characters.";
 
+    if (mode === "signup") {
+      if (!dobValue) {
+        next.date_of_birth = "Date of birth is required.";
+      } else {
+        const d = new Date(dobValue);
+        const now = new Date();
+        if (Number.isNaN(d.getTime()) || d > now) {
+          next.date_of_birth = "Please enter a real past date.";
+        } else if (d.getFullYear() < 1900) {
+          next.date_of_birth = "Please enter a valid year.";
+        } else {
+          const age = getAgeInYears(d, now);
+          if (age < 4) next.date_of_birth = "You must be at least 4 years old.";
+          if (age > 120) next.date_of_birth = "Please enter a real date of birth.";
+        }
+      }
+    }
+
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
     const result = mode === "signup"
-      ? await signUp(name, email, password)
+      ? await signUp(name, email, password, dobValue)
       : await signIn(email, password);
     setSubmitting(false);
 
@@ -57,8 +86,10 @@ function AuthPage() {
       return;
     }
     toast.success(mode === "signup" ? "Welcome to EcoLife." : "Welcome back.");
-    navigate({ to: mode === "signup" ? "/age-check" : "/scanner" });
+    navigate({ to: "/scanner" });
   }
+
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground antialiased">
@@ -103,6 +134,39 @@ function AuthPage() {
           <Field label="Email" name="email" type="email" autoComplete="email" placeholder="you@earth.io" error={errors.email} />
           <Field label="Password" name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} error={errors.password} />
 
+          {mode === "signup" && (
+            <div>
+              <label htmlFor="date_of_birth" className="block text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+                Date of Birth — used only to set your safety preferences
+              </label>
+              <input
+                id="date_of_birth"
+                name="date_of_birth"
+                type="date"
+                value={dob}
+                max={todayIso}
+                onChange={(e) => setDob(e.target.value)}
+                className="mt-2 w-full border-0 border-b border-foreground bg-transparent px-0 py-3 font-serif text-lg text-foreground focus:border-[color:var(--sage)] focus:outline-none focus:ring-0"
+              />
+              <p className="mt-2 text-xs text-foreground/50">
+                We store your date of birth securely. It is never shared and is deleted when you close your account.
+              </p>
+              {errors.date_of_birth && (
+                <p className="mt-1.5 text-sm" style={{ color: "#BF5E49" }}>{errors.date_of_birth}</p>
+              )}
+              {showUnder13Notice && (
+                <p className="mt-3 rounded-md border border-[color:var(--sage)]/40 bg-[color:var(--sage)]/10 px-3 py-2 text-sm text-foreground/80">
+                  This app is designed for users 13 and older. You can still use it, but some features will be limited.
+                </p>
+              )}
+            </div>
+          )}
+
+          {mode === "signup" && (
+            <p className="text-center text-xs text-foreground/60">
+              By signing up, you confirm that your date of birth is accurate. We use it only to personalize safety settings.
+            </p>
+          )}
 
           <div className="pt-2">
             <Button
@@ -160,4 +224,3 @@ function Field({
     </div>
   );
 }
-
