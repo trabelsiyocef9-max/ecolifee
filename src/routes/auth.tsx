@@ -173,17 +173,46 @@ function AuthPage() {
             </p>
           )}
 
+          {mode === "signup" && (
+            <div>
+              <label className="flex items-start gap-3 text-sm text-foreground/75">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  required
+                  className="mt-1 h-4 w-4 shrink-0 accent-[color:var(--clay)]"
+                />
+                <span>
+                  I have read and agree to the{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">
+                    Terms of Use
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">
+                    Privacy Policy
+                  </a>
+                  .
+                </span>
+              </label>
+              {errors.terms && (
+                <p className="mt-1.5 text-sm" style={{ color: "#BF5E49" }}>{errors.terms}</p>
+              )}
+            </div>
+          )}
+
           <div className="pt-2">
             <Button
               type="submit"
               size="lg"
-              disabled={submitting}
+              disabled={submitting || (mode === "signup" && !agreed)}
               className="h-12 w-full rounded-full bg-[color:var(--clay)] px-7 text-sm font-bold uppercase tracking-wider text-[color:var(--clay-foreground)] shadow-[var(--shadow-elegant)] hover:bg-[color:var(--clay)]/90"
             >
               {submitting ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
+
 
           <p className="text-center text-sm text-foreground/60">
             {mode === "signup" ? "Already a member?" : "New to EcoLife?"}{" "}
