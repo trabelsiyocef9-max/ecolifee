@@ -24,6 +24,7 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dob, setDob] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
