@@ -162,6 +162,9 @@ export function NavBar() {
                 </Link>
               )}
             </li>
+            <li className="px-2 py-3">
+              <LanguageSelect className="w-full" />
+            </li>
           </ul>
         </nav>
       )}
