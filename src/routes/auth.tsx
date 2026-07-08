@@ -73,6 +73,10 @@ function AuthPage() {
       }
     }
 
+    if (mode === "signup" && !agreed) {
+      next.terms = "You must agree to the Terms of Use and Privacy Policy to continue.";
+    }
+
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
