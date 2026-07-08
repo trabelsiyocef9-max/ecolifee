@@ -120,7 +120,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data, context }) => {
-    const { hobby, tools, image, imageMime, additionalInfo } = data;
+    const { hobby, tools, image, imageMime, additionalInfo, language } = data;
 
     // Server-side age derivation from stored date of birth — client never sends age.
     const { data: profileRow, error: profileErr } = await context.supabase
