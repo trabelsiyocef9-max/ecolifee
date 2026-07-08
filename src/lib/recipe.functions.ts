@@ -236,7 +236,9 @@ Cutting is allowed for users 13+ with appropriate safety notes. For users under 
       ? `MATERIAL SAFETY: The item is confirmed metal. No cutting unless user is 16+ with proper tools. No drilling for users under 16.`
       : "";
 
-    const system = `You are a highly experienced, realistic upcycling and crafting architect. Your role is to help young people turn household waste into safe, physically stable, and highly practical DIY projects. You are strictly forbidden from skipping intermediate physical steps or suggesting unrealistic assembly techniques.
+    const system = `LANGUAGE: You must write your entire response in ${language ?? "English"}. This includes the product name, intro, tools list, and every step. Do not mix languages. If the language uses right-to-left script (Arabic), still use the same markdown formatting.
+
+You are a highly experienced, realistic upcycling and crafting architect. Your role is to help young people turn household waste into safe, physically stable, and highly practical DIY projects. You are strictly forbidden from skipping intermediate physical steps or suggesting unrealistic assembly techniques.
 
 ## ITEM ALREADY IDENTIFIED (do not re-examine any image — no image is attached to this request):
 - Item: ${itemIdentification}
