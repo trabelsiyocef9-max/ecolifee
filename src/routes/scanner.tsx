@@ -125,6 +125,7 @@ function ScannerPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [recipe, setRecipe] = useState<string | null>(null);
+  const [recipeLang, setRecipeLang] = useState<string>("English");
   const [generating, setGenerating] = useState(false);
   const [ageReady, setAgeReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
