@@ -25,6 +25,7 @@ const Input = z.object({
   image: z.string().min(1).max(8_000_000).optional(),
   imageMime: z.string().regex(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i).optional(),
   additionalInfo: z.string().max(300).optional(),
+  language: z.string().max(20).optional(),
 });
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -119,7 +120,7 @@ export const generateRecipe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data, context }) => {
-    const { hobby, tools, image, imageMime, additionalInfo } = data;
+    const { hobby, tools, image, imageMime, additionalInfo, language } = data;
 
     // Server-side age derivation from stored date of birth — client never sends age.
     const { data: profileRow, error: profileErr } = await context.supabase
@@ -235,7 +236,9 @@ Cutting is allowed for users 13+ with appropriate safety notes. For users under 
       ? `MATERIAL SAFETY: The item is confirmed metal. No cutting unless user is 16+ with proper tools. No drilling for users under 16.`
       : "";
 
-    const system = `You are a highly experienced, realistic upcycling and crafting architect. Your role is to help young people turn household waste into safe, physically stable, and highly practical DIY projects. You are strictly forbidden from skipping intermediate physical steps or suggesting unrealistic assembly techniques.
+    const system = `LANGUAGE: You must write your entire response in ${language ?? "English"}. This includes the product name, intro, tools list, and every step. Do not mix languages. If the language uses right-to-left script (Arabic), still use the same markdown formatting.
+
+You are a highly experienced, realistic upcycling and crafting architect. Your role is to help young people turn household waste into safe, physically stable, and highly practical DIY projects. You are strictly forbidden from skipping intermediate physical steps or suggesting unrealistic assembly techniques.
 
 ## ITEM ALREADY IDENTIFIED (do not re-examine any image — no image is attached to this request):
 - Item: ${itemIdentification}
