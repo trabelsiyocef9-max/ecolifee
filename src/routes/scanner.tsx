@@ -343,6 +343,7 @@ function ScannerPage() {
         },
       });
       setRecipe(result.content);
+      setRecipeLang(language);
       toast.success(result.degraded ? "Recipe ready (free model)." : "Your DIY recipe is ready.");
     } catch (err) {
       console.error(err);
