@@ -92,6 +92,7 @@ export function NavBar() {
               {l.label}
             </Link>
           ))}
+          <LanguageSelect />
           {isAuthenticated ? (
             <button
               type="button"
