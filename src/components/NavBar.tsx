@@ -1,6 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
+
+const LANGUAGES = [
+  { value: "English", label: "English" },
+  { value: "Arabic", label: "العربية" },
+  { value: "French", label: "Français" },
+];
+
+function LanguageSelect({ className = "" }: { className?: string }) {
+  const [lang, setLang] = useState("English");
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("preferredLanguage") : null;
+    if (stored) setLang(stored);
+  }, []);
+  function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const v = e.target.value;
+    setLang(v);
+    localStorage.setItem("preferredLanguage", v);
+  }
+  return (
+    <select
+      aria-label="Language"
+      value={lang}
+      onChange={onChange}
+      className={`rounded-full border border-foreground/20 bg-transparent px-3 py-1.5 text-xs font-medium tracking-wide text-foreground/80 focus:outline-none ${className}`}
+    >
+      {LANGUAGES.map((l) => (
+        <option key={l.value} value={l.value}>{l.label}</option>
+      ))}
+    </select>
+  );
+}
 import logoAsset from "@/assets/logo.png.asset.json";
 import { useAuth } from "@/hooks/useAuth";
 
