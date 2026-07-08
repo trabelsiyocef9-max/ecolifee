@@ -25,6 +25,7 @@ const Input = z.object({
   image: z.string().min(1).max(8_000_000).optional(),
   imageMime: z.string().regex(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i).optional(),
   additionalInfo: z.string().max(300).optional(),
+  language: z.string().max(20).optional(),
 });
 
 const GEMINI_MODEL = "gemini-2.5-flash";
