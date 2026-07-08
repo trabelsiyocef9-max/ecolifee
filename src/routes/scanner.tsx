@@ -330,6 +330,7 @@ function ScannerPage() {
     setRecipe(null);
     try {
       const { data: imageData, mime: imageMime } = await fileToBase64(imageFile);
+      const language = (typeof window !== "undefined" && localStorage.getItem("preferredLanguage")) || "English";
       const result = await callGenerate({
         data: {
           hobby: joined,
@@ -337,6 +338,7 @@ function ScannerPage() {
           image: imageData,
           imageMime,
           additionalInfo: additionalInfo.trim() || undefined,
+          language,
         },
       });
       setRecipe(result.content);
